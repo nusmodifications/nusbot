@@ -26,6 +26,8 @@ require_relative "nusbotgram/data_types/user_profile_photos"
 require_relative "nusbotgram/bot"
 require_relative "nusbotgram/api_response"
 
+require_relative "engine/core"
+
 module NUSBotgram
   module Errors
     # Error returned when a required param is missing

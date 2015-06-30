@@ -12,9 +12,20 @@ module NUSBotgram
       @me = get_me
     end
 
+    def update(&block)
+      response = api_request("getUpdates", { offset: @offset, timeout: @timeout }, nil)
+
+      response.result.each do |raw_update|
+        update = NUSBotgram::DataTypes::Update.new(raw_update)
+
+        @offset = update.update_id + 1
+        yield update.message
+      end
+    end
+
     def get_updates(&block)
       loop do
-        response = api_request("getUpdates", {offset: @offset, timeout: @timeout}, nil)
+        response = api_request("getUpdates", { offset: @offset, timeout: @timeout }, nil)
 
         response.result.each do |raw_update|
           update = NUSBotgram::DataTypes::Update.new(raw_update)
@@ -26,7 +37,7 @@ module NUSBotgram
     end
 
     def set_webhook(url)
-      api_request("setWebhook", {url: url}, nil)
+      api_request("setWebhook", { url: url }, nil)
     end
 
     def get_me
@@ -45,7 +56,7 @@ module NUSBotgram
               NUSBotgram::DataTypes::ReplyKeyboardMarkup,
               NUSBotgram::DataTypes::ReplyKeyboardHide,
               NUSBotgram::DataTypes::ForceReply,
-          ]}
+          ] }
       }
 
       response = api_request("sendMessage", params, params_validation)
@@ -75,7 +86,7 @@ module NUSBotgram
               NUSBotgram::DataTypes::ReplyKeyboardMarkup,
               NUSBotgram::DataTypes::ReplyKeyboardHide,
               NUSBotgram::DataTypes::ForceReply,
-          ]}
+          ] }
       }
 
       response = api_request("sendPhoto", params, params_validation)
@@ -92,7 +103,7 @@ module NUSBotgram
               NUSBotgram::DataTypes::ReplyKeyboardMarkup,
               NUSBotgram::DataTypes::ReplyKeyboardHide,
               NUSBotgram::DataTypes::ForceReply,
-          ]}
+          ] }
       }
 
       response = api_request("sendAudio", params, params_validation)
@@ -109,7 +120,7 @@ module NUSBotgram
               NUSBotgram::DataTypes::ReplyKeyboardMarkup,
               NUSBotgram::DataTypes::ReplyKeyboardHide,
               NUSBotgram::DataTypes::ForceReply,
-          ]}
+          ] }
       }
 
       response = api_request("sendDocument", params, params_validation)
@@ -126,7 +137,7 @@ module NUSBotgram
               NUSBotgram::DataTypes::ReplyKeyboardMarkup,
               NUSBotgram::DataTypes::ReplyKeyboardHide,
               NUSBotgram::DataTypes::ForceReply,
-          ]}
+          ] }
       }
 
       response = api_request("sendSticker", params, params_validation)
@@ -143,7 +154,7 @@ module NUSBotgram
               NUSBotgram::DataTypes::ReplyKeyboardMarkup,
               NUSBotgram::DataTypes::ReplyKeyboardHide,
               NUSBotgram::DataTypes::ForceReply,
-          ]}
+          ] }
       }
 
       response = api_request("sendVideo", params, params_validation)
@@ -161,7 +172,7 @@ module NUSBotgram
               NUSBotgram::DataTypes::ReplyKeyboardMarkup,
               NUSBotgram::DataTypes::ReplyKeyboardHide,
               NUSBotgram::DataTypes::ForceReply,
-          ]}
+          ] }
       }
 
       response = api_request("sendLocation", params, params_validation)
@@ -199,7 +210,7 @@ module NUSBotgram
         validated_params = params
       else
         # Delete params not accepted by the API
-        validated_params = params.delete_if {|k, v| !params_validation.has_key?(k) }
+        validated_params = params.delete_if { |k, v| !params_validation.has_key?(k) }
 
         # Check all required params by the action are present
         params_validation.each do |key, value|
