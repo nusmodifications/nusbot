@@ -1,5 +1,8 @@
 # Created by https://www.gitignore.io
 
+### Config ###
+config/config.yml
+
 ### RubyMine ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
 
