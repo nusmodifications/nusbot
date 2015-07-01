@@ -2,7 +2,6 @@
 
 ### Config ###
 lib/config/config.yml
-*.yml
 Gemfile.lock
 
 ### RubyMine ###
