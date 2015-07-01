@@ -36,36 +36,45 @@ module NUSBotgram
     public
 
     def retrieve_mod(uri, start_year, end_year, sem)
+      i = 0
       modules = callback(uri)
       modules_hash = Hash.new
-      i = 0
 
       modules.each do |key, value|
         code_query = /[a-zA-Z]{2,3}[\s]?[\d]{4}[a-zA-Z]{0,2}/
         module_code = key.match code_query
 
-        # module_code = mods.sub!(/\S+\([\S+\]\=\S+)/, "")
         response = HTTParty.get("http://api.nusmods.com/#{start_year}-#{end_year}/#{sem}/modules/#{module_code}.json")
         result = response.body
         json_result = JSON.parse(result)
 
-        slot = value.to_i - 1
-
         mod_code = json_result["ModuleCode"]
         mod_title = json_result["ModuleTitle"]
-        class_no = json_result["Timetable"][slot]["ClassNo"]
-        lesson_type = json_result["Timetable"][slot]["LessonType"]
-        start_time = json_result["Timetable"][slot]["StartTime"]
-        end_time = json_result["Timetable"][slot]["EndTime"]
-        venue = json_result["Timetable"][slot]["Venue"]
+        timetable = json_result["Timetable"]
+        lecture_periods = json_result["LecturePeriods"]
+        tutorial_periods = json_result["TutorialPeriods"]
 
-        modules_hash["#{mod_code}-#{i}"] = { :module_code => mod_code,
-                                             :module_title => mod_title,
-                                             :class_no => class_no,
-                                             :lesson_type => lesson_type,
-                                             :start_time => start_time,
-                                             :end_time => end_time,
-                                             :venue => venue }
+        timetable.each do |_key|
+          if _key["ClassNo"] == "#{value}"
+            class_no = _key["ClassNo"]
+            lesson_type = _key["LessonType"]
+            day_text = _key["DayText"]
+            start_time = _key["StartTime"]
+            end_time = _key["EndTime"]
+            venue = _key["Venue"]
+
+            modules_hash["#{mod_code}-#{i}"] = { :module_code => mod_code,
+                                                 :module_title => mod_title,
+                                                 :class_no => class_no,
+                                                 :lesson_type => lesson_type,
+                                                 :day_text => day_text,
+                                                 :start_time => start_time,
+                                                 :end_time => end_time,
+                                                 :venue => venue,
+                                                 :lecture_periods => lecture_periods,
+                                                 :tutorial_periods => tutorial_periods }
+          end
+        end
 
         i += 1
       end
