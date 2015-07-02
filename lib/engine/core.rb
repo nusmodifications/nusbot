@@ -1,16 +1,25 @@
 require 'addressable/uri'
+require 'digest'
 require 'httparty'
 require 'json'
+require 'redis'
 
 module NUSBotgram
   class Core
+    CONFIG = YAML.load_file("../lib/config/config.yml")
+    DB_TOKEN = Digest::MD5.hexdigest(CONFIG[3][:DB_TOKEN])
+    DB_KEY = Digest::MD5.hexdigest(CONFIG[3][:DB_KEY])
+    API_ENDPOINT = 'http://api.nusmods.com/'
+    REDIRECT_ENDPOINT = 'http://nusmods.com/redirect.php?timetable='
+
     def initialize
+      @@redis = Redis.new(:host => CONFIG[2][:REDIS_HOST], :port => CONFIG[2][:REDIS_PORT], :db => 0)
     end
 
     private
 
     def callback(uri)
-      _uri = 'http://nusmods.com/redirect.php?timetable=' + uri
+      _uri = REDIRECT_ENDPOINT + uri
       mods = Hash.new
 
       # Resolve NUSMods Shortened link
@@ -35,16 +44,19 @@ module NUSBotgram
 
     public
 
-    def retrieve_mod(uri, start_year, end_year, sem)
-      i = 0
+    def retrieve_mod(uri, start_year, end_year, sem, *args)
+      @@redis.select(0)
+      telegram_id = args[0]
       modules = callback(uri)
-      modules_hash = Hash.new
+      uri_code = Addressable::URI.parse(uri).path[1, 9]
 
       modules.each do |key, value|
+        unfreeze_key = key.dup
         code_query = /[a-zA-Z]{2,3}[\s]?[\d]{4}[a-zA-Z]{0,2}/
         module_code = key.match code_query
+        module_type = unfreeze_key.sub!(code_query, "")[1, 3]
 
-        response = HTTParty.get("http://api.nusmods.com/#{start_year}-#{end_year}/#{sem}/modules/#{module_code}.json")
+        response = HTTParty.get("#{API_ENDPOINT}#{start_year}-#{end_year}/#{sem}/modules/#{module_code}.json")
         result = response.body
         json_result = JSON.parse(result)
 
@@ -55,31 +67,34 @@ module NUSBotgram
         tutorial_periods = json_result["TutorialPeriods"]
 
         timetable.each do |_key|
-          if _key["ClassNo"] == "#{value}"
-            class_no = _key["ClassNo"]
-            lesson_type = _key["LessonType"]
-            day_text = _key["DayText"]
-            start_time = _key["StartTime"]
-            end_time = _key["EndTime"]
-            venue = _key["Venue"]
+          class_no = _key["ClassNo"]
+          lesson_type = _key["LessonType"]
+          week_text = _key["WeekText"]
+          day_text = _key["DayText"]
+          start_time = _key["StartTime"]
+          end_time = _key["EndTime"]
+          venue = _key["Venue"]
 
-            modules_hash["#{mod_code}-#{i}"] = { :module_code => mod_code,
-                                                 :module_title => mod_title,
-                                                 :class_no => class_no,
-                                                 :lesson_type => lesson_type,
-                                                 :day_text => day_text,
-                                                 :start_time => start_time,
-                                                 :end_time => end_time,
-                                                 :venue => venue,
-                                                 :lecture_periods => lecture_periods,
-                                                 :tutorial_periods => tutorial_periods }
+          # Customized JSON hash
+          # Replace JSON hash with `_key` returns the same result
+          if class_no.eql?(value) && lesson_type[0, 3].upcase.eql?(module_type)
+            @@redis.hsetnx("users:#{telegram_id}:#{uri_code}",
+                           "#{DB_KEY}.#{telegram_id}.#{mod_code}#{module_type}.#{class_no}",
+                           { :uri => uri,
+                             :module_code => mod_code,
+                             :module_title => mod_title,
+                             :class_no => class_no,
+                             :week_text => week_text,
+                             :lesson_type => lesson_type,
+                             :day_text => day_text,
+                             :start_time => start_time,
+                             :end_time => end_time,
+                             :venue => venue,
+                             :lecture_periods => lecture_periods,
+                             :tutorial_periods => tutorial_periods })
           end
         end
-
-        i += 1
       end
-
-      modules_hash
     end
   end
 end
