@@ -18,6 +18,8 @@ module NUSBotgram
     mod_uri = ""
 
     bot.get_updates do |message|
+      puts "In chat #{message.chat.id}, @#{message.from.first_name} > @#{message.from.id} said: #{message.text}"
+
       case message.text
         when /greet/i
           message.text = "Hello, #{message.from.first_name}!"
@@ -61,6 +63,16 @@ module NUSBotgram
 
           message.text = "He is Kenneth Ham."
           bot.send_message(chat_id: message.chat.id, text: message.text)
+        when /^what time is it now$/i
+          now = Time.now.getlocal('+08:00').strftime("%H:%M GMT%z")
+
+          message.text = "The time now is #{now}"
+          bot.send_message(chat_id: message.chat.id, text: message.text)
+        when /^what time now$/i
+          now = Time.now.getlocal('+08:00').strftime("%H:%M GMT%z")
+
+          message.text = "The time now is #{now}"
+          bot.send_message(chat_id: message.chat.id, text: message.text)
         when /bye/i
           sticker_id = sticker_collections[0][:AUDREY_IS_ON_THE_VERGE_OF_TEARS]
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
@@ -78,6 +90,16 @@ module NUSBotgram
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
           message.text = "[Sigh] Tell me you didn't just try to shut me down..."
+          bot.send_message(chat_id: message.chat.id, text: message.text)
+        when /^\/time$/i
+          now = Time.now.getlocal('+08:00').strftime("%H:%M GMT%z")
+
+          message.text = "The time now is #{now}"
+          bot.send_message(chat_id: message.chat.id, text: message.text)
+        when /^\/now$/i
+          now = Time.now.getlocal('+08:00').strftime("%H:%M GMT%z")
+
+          message.text = "The time now is #{now}"
           bot.send_message(chat_id: message.chat.id, text: message.text)
         when /^\/poke$/i
           sticker_id = sticker_collections[0][:RICHARD_WAGNERS_TOLD_YOU]
@@ -288,6 +310,12 @@ module NUSBotgram
         when /where is subway at utown?/i
           loc = NUSBotgram::DataTypes::Location.new(latitude: 1.3036985632674172, longitude: 103.77380311489104)
           bot.send_location(chat_id: message.chat.id, latitude: loc.latitude, longitude: loc.longitude)
+        when /^\/([a-zA-Z]|\d+)/
+          sticker_id = sticker_collections[0][:THAT_FREUDIAN_SCOWL]
+          bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+          message.text = "Unrecognized command. Say what?"
+          bot.send_message(chat_id: message.chat.id, text: message.text)
       end
     end
   end
