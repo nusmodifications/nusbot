@@ -42,6 +42,14 @@ module NUSBotgram
       mods
     end
 
+    public
+
+    def get_uri_code(nusmods_uri)
+      code = Addressable::URI.parse(nusmods_uri).path[1, 9]
+
+      code
+    end
+
     private
 
     # If different NUSMods is sent, delete all the existing modules, then store the new modules.
@@ -55,13 +63,13 @@ module NUSBotgram
 
     public
 
-    def retrieve_mod(uri, start_year, end_year, sem, *args)
+    def set_mod(uri, start_year, end_year, sem, *args)
       @@redis.select(0)
       telegram_id = args[0]
       is_deleted = false
-      
+
       modules = callback(uri)
-      uri_code = Addressable::URI.parse(uri).path[1, 9]
+      uri_code = get_uri_code(uri)
 
       modules.each do |key, value|
         unfreeze_key = key.dup
@@ -105,7 +113,7 @@ module NUSBotgram
 
               @@redis.hsetnx("#{hash_key}",
                              "#{uri_code}.#{telegram_id}.#{mod_code}#{module_type}.#{class_no}",
-                             {:uri => uri,
+                             [:uri => uri,
                               :module_code => mod_code,
                               :module_title => mod_title,
                               :class_no => class_no,
@@ -116,11 +124,11 @@ module NUSBotgram
                               :end_time => end_time,
                               :venue => venue,
                               :lecture_periods => lecture_periods,
-                              :tutorial_periods => tutorial_periods})
+                              :tutorial_periods => tutorial_periods].to_json)
             else
               @@redis.hsetnx("#{hash_key}",
                              "#{uri_code}.#{telegram_id}.#{mod_code}#{module_type}.#{class_no}",
-                             {:uri => uri,
+                             [:uri => uri,
                               :module_code => mod_code,
                               :module_title => mod_title,
                               :class_no => class_no,
@@ -131,11 +139,34 @@ module NUSBotgram
                               :end_time => end_time,
                               :venue => venue,
                               :lecture_periods => lecture_periods,
-                              :tutorial_periods => tutorial_periods})
+                              :tutorial_periods => tutorial_periods].to_json)
             end
           end
         end
       end
+    end
+
+    public
+
+    def get_mod(telegram_id)
+      @@redis.select(0)
+      modules_hash = Hash.new
+
+      uri_code = @@redis.hget("users", telegram_id)
+      hash_key = "users:#{telegram_id}.#{uri_code}"
+
+      if !uri_code
+        "404"
+      else
+        results = @@redis.hgetall(hash_key)
+
+        results.each do |key, value|
+          json_value = JSON.parse(@@redis.hget(hash_key, key))
+          modules_hash[key] = json_value
+        end
+      end
+
+      modules_hash
     end
   end
 end
