@@ -151,36 +151,68 @@ module NUSBotgram
             bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
           end
         when /^\/listmods$/i
-          if mod_uri == nil || mod_uri.eql?("")
+          if !engine.db_exist(message.from.id)
             force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
             bot.send_message(chat_id: message.chat.id, text: "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)", reply_markup: force_reply)
 
             bot.update do |msg|
               mod_uri = msg.text
+              telegram_id = msg.from.id
+
+              engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
               bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
               bot.send_message(chat_id: msg.chat.id, text: "Give me awhile, while I retrieve your timetable...")
 
-              mods = engine.retrieve_mod(mod_uri, START_YEAR, END_YEAR, SEM)
+              mods = engine.get_mod(telegram_id)
               mods.each do |key, value|
-                formatted = "#{value[:module_code]} - #{value[:module_title]}
-						              [#{value[:lesson_type][0, 3].upcase}][#{value[:class_no]}]
-						              #{value[:start_time]} - #{value[:end_time]} @ #{value[:venue]}"
+                if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                  formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+											       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                          #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
+                  bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                  daytime = engine.check_daytime(value[0]["start_time"])
+
+                  if daytime == 0
+                    daytime = 0
+                  end
+
+                  formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+											       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                          #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+
+                  bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                end
               end
 
               bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
             end
           else
+            telegram_id = message.from.id
             bot.send_message(chat_id: message.chat.id, text: "Give me awhile, while I retrieve your timetable...")
 
-            mods = engine.retrieve_mod(mod_uri, START_YEAR, END_YEAR, SEM)
+            mods = engine.get_mod(telegram_id)
             mods.each do |key, value|
-              formatted = "#{value[:module_code]} - #{value[:module_title]}
-						             [#{value[:lesson_type][0, 3].upcase}][#{value[:class_no]}]
-						             #{value[:start_time]} - #{value[:end_time]} @ #{value[:venue]}"
+              if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+										       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                        #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-              bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+              elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                daytime = engine.check_daytime(value[0]["start_time"])
+
+                if daytime == 0
+                  daytime = 0
+                end
+
+                formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+										       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                        #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+
+                bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+              end
             end
 
             bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")

@@ -148,6 +148,24 @@ module NUSBotgram
 
     public
 
+    def db_exist(telegram_id)
+      @@redis.hget("users", telegram_id)
+    end
+
+    public
+
+    def check_daytime(time)
+      if time[0, 2].to_i >= 0 && time[0, 2].to_i <= 11
+        return 0
+      elsif time[0, 2].to_i >= 12 && time[0, 2].to_i <= 17
+        return 1
+      elsif time[0, 2].to_i >= 18 && time[0, 2].to_i <= 24
+        return 2
+      end
+    end
+
+    public
+
     def get_mod(telegram_id)
       @@redis.select(0)
       modules_hash = Hash.new
