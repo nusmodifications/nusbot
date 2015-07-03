@@ -15,7 +15,6 @@ module NUSBotgram
     sticker_collections = YAML.load_file("config/stickers.yml")
     bot = NUSBotgram::Bot.new(config[0][:T_BOT_APIKEY_DEV])
     engine = NUSBotgram::Core.new
-    mod_uri = ""
 
     bot.get_updates do |message|
       puts "In chat #{message.chat.id}, @#{message.from.first_name} > @#{message.from.id} said: #{message.text}"
@@ -148,6 +147,8 @@ module NUSBotgram
 
           bot.update do |msg|
             mod_uri = msg.text
+            engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+            
             bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
           end
         when /^\/listmods$/i
