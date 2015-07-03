@@ -22,15 +22,19 @@ module NUSBotgram
       case message.text
         when /greet/i
           message.text = "Hello, #{message.from.first_name}!"
+          bot.send_chat_action(chat_id: message.chat.id, action: "typing")
           bot.send_message(chat_id: message.chat.id, text: message.text)
         when /^hello$/
           message.text = "Hello, #{message.from.first_name}!"
+          bot.send_chat_action(chat_id: message.chat.id, action: "typing")
           bot.send_message(chat_id: message.chat.id, text: message.text)
         when /^hi$/
           message.text = "Hello, #{message.from.first_name}!"
+          bot.send_chat_action(chat_id: message.chat.id, action: "typing")
           bot.send_message(chat_id: message.chat.id, text: message.text)
         when /^hey$/
           message.text = "Hello, #{message.from.first_name}!"
+          bot.send_chat_action(chat_id: message.chat.id, action: "typing")
           bot.send_message(chat_id: message.chat.id, text: message.text)
         when /how is your day/i
           message.text = "I'm good. How about you?"
