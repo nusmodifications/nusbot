@@ -148,7 +148,7 @@ module NUSBotgram
           bot.update do |msg|
             mod_uri = msg.text
             engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
-            
+
             bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
           end
         when /^\/listmods$/i
@@ -169,7 +169,7 @@ module NUSBotgram
                 if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
                   formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
 											       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
-                          #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                  #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
                   bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                 elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
@@ -181,7 +181,7 @@ module NUSBotgram
 
                   formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
 											       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
-                          #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                  #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
                   bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                 end
@@ -198,7 +198,7 @@ module NUSBotgram
               if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
                 formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
 										       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
-                        #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
                 bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
               elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
@@ -210,7 +210,7 @@ module NUSBotgram
 
                 formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
 										       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
-                        #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
                 bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
               end
@@ -219,50 +219,80 @@ module NUSBotgram
             bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
           end
         when /^\/getmod$/i
-          i = 0
-
-          if mod_uri == nil || mod_uri.eql?("")
+          if !engine.db_exist(message.from.id)
             force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
             bot.send_message(chat_id: message.chat.id, text: "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)", reply_markup: force_reply)
 
             bot.update do |msg|
               mod_uri = msg.text
+              telegram_id = msg.from.id
+
+              engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
               bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
               bot.send_message(chat_id: msg.chat.id, text: "Alright! What modules do you want to search?", reply_markup: force_reply)
 
               bot.update do |mod|
-                mods = engine.retrieve_mod(mod_uri, START_YEAR, END_YEAR, SEM)
+                mods = engine.get_mod(telegram_id)
                 mod_code = mod.text.upcase
 
                 mods.each do |key, value|
-                  if mods["#{mod_code}-#{i}"] == nil || mods["#{mod_code}-#{i}"].eql?("")
+                  if value[0]["module_code"].eql?(mod_code)
+                    if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                      formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+                             [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                      #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                  else
-                    bot.send_message(chat_id: mod.chat.id, text: "[#{mods["#{mod_code}-#{i}"][:lesson_type][0, 3].upcase}][#{mods["#{mod_code}-#{i}"][:class_no]}]: #{mods["#{mod_code}-#{i}"][:start_time]} - #{mods["#{mod_code}-#{i}"][:end_time]} @ #{mods["#{mod_code}-#{i}"][:venue]}")
+                      bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                    elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                      daytime = engine.check_daytime(value[0]["start_time"])
+
+                      if daytime == 0
+                        daytime = 0
+                      end
+
+                      formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+                             [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                      #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+
+                      bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                    end
                   end
-
-                  i += 1
                 end
 
                 bot.send_message(chat_id: mod.chat.id, text: "There you go, #{mod.from.first_name}!")
               end
             end
           else
+            telegram_id = message.from.id
             force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
             bot.send_message(chat_id: message.chat.id, text: "Alright! What modules do you want to search?", reply_markup: force_reply)
 
             bot.update do |msg|
-              mods = engine.retrieve_mod(mod_uri, START_YEAR, END_YEAR, SEM)
+              mods = engine.get_mod(telegram_id)
               mod_code = msg.text.upcase
 
               mods.each do |key, value|
-                if mods["#{mod_code}-#{i}"] == nil || mods["#{mod_code}-#{i}"].eql?("")
+                if value[0]["module_code"].eql?(mod_code)
+                  if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+                            [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                    #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                else
-                  bot.send_message(chat_id: msg.chat.id, text: "[#{mods["#{mod_code}-#{i}"][:lesson_type][0, 3].upcase}][#{mods["#{mod_code}-#{i}"][:class_no]}]: #{mods["#{mod_code}-#{i}"][:start_time]} - #{mods["#{mod_code}-#{i}"][:end_time]} @ #{mods["#{mod_code}-#{i}"][:venue]}")
+                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                  elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                    daytime = engine.check_daytime(value[0]["start_time"])
+
+                    if daytime == 0
+                      daytime = 0
+                    end
+
+                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+                            [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                    #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+
+                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                  end
                 end
-
-                i += 1
               end
 
               bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
@@ -271,54 +301,80 @@ module NUSBotgram
         when /^\/today$/i
           day_today = Time.now.strftime("%A")
 
-          # if mod_uri == nil || mod_uri.eql?("")
-          #   force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
-          #   bot.send_message(chat_id: message.chat.id, text: "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)", reply_markup: force_reply)
-          #
-          #   bot.update do |msg|
-          #     mod_uri = msg.text
-          #     bot.send_message(chat_id: message.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
-          #
-          #     bot.update do |mod|
-          #       mods = engine.retrieve_mod(mod_uri, START_YEAR, END_YEAR, SEM)
-          #       mod_code = mod.text.upcase
-          #
-          #       mods.each do |key, value|
-          #         if mods["#{mod_code}-#{i}"] == nil || mods["#{mod_code}-#{i}"].eql?("")
-          #           puts "EMPTY"
-          #         else
-          #           bot.send_message(chat_id: message.chat.id, text: "[#{mods["#{mod_code}-#{i}"][:lesson_type][0, 3].upcase}][#{mods["#{mod_code}-#{i}"][:class_no]}]: #{mods["#{mod_code}-#{i}"][:start_time]} - #{mods["#{mod_code}-#{i}"][:end_time]} @ #{mods["#{mod_code}-#{i}"][:venue]}")
-          #         end
-          #       end
-          #     end
-          #   end
-          # else
-          #   mods = engine.retrieve_mod(mod_uri, START_YEAR, END_YEAR, SEM)
-          #
-          #   mods.each do |key, value|
-          #     puts "#{key} : #{value}"
-          #
-          #     if value[:day_text] == day_today || value[:day_text].eql?("#{day_today}")
-          #       bot.send_message(chat_id: message.chat.id, text: "#{value[:module_code]} [#{value[:lesson_type]}][#{value[:class_no]}]: #{value[:start_time]} - #{value[:end_time]} @ #{value[:venue]}")
-          #     else
-          #       value[:lecture_periods].each do |k, v|
-          #         # to fix algorithm - Get lecture periods which affects the current day only
-          #
-          #         # _day = k.match DAY_REGEX
-          #
-          #         # day_array = _day.to_a
-          #
-          #         # if day_array[0] == day_today
-          #         #   bot.send_message(chat_id: message.chat.id, text: "#{value[:module_code]} [#{value[:lesson_type]}][#{value[:class_no]}]: #{value[:start_time]} - #{value[:end_time]} @ #{value[:venue]}")
-          #         # end
-          #       end
-          #       # bot.send_message(chat_id: message.chat.id, text: "[#{mods["#{mod_code}-#{i}"][:lesson_type][0, 3].upcase}][#{mods["#{mod_code}-#{i}"][:class_no]}]: #{mods["#{mod_code}-#{i}"][:start_time]} - #{mods["#{mod_code}-#{i}"][:end_time]} @ #{mods["#{mod_code}-#{i}"][:venue]}")
-          #     end
-          #   end
-          #
-          #   bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
-          # end
-          bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
+          if !engine.db_exist(message.from.id)
+            force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+            bot.send_message(chat_id: message.chat.id, text: "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)", reply_markup: force_reply)
+
+            bot.update do |msg|
+              mod_uri = msg.text
+              telegram_id = msg.from.id
+
+              engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+              bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
+              bot.send_message(chat_id: msg.chat.id, text: "Alright! Let's get you your schedule for today!")
+
+              mods = engine.get_mod(telegram_id)
+
+              mods.each do |key, value|
+                if value[0]["day_text"].eql?(day_today)
+                  if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+                            [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                            #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+
+                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                  elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                    daytime = engine.check_daytime(value[0]["start_time"])
+
+                    if daytime == 0
+                      daytime = 0
+                    end
+
+                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+                            [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                            #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+
+                    bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
+                  end
+                end
+              end
+
+              bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
+            end
+          else
+            telegram_id = message.from.id
+            bot.send_message(chat_id: message.chat.id, text: "Alright! Let's get you your schedule for today!")
+
+            mods = engine.get_mod(telegram_id)
+
+            mods.each do |key, value|
+              if value[0]["day_text"].eql?(day_today)
+                if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                  formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+                          [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                          #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+
+                  bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                  daytime = engine.check_daytime(value[0]["start_time"])
+
+                  if daytime == 0
+                    daytime = 0
+                  end
+
+                  formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
+                          [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                          #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+
+                  bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                end
+              end
+            end
+
+            bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+          end
+
+          bot.send_message(chat_id: message.chat.id, text: "Operation not fully implemented yet")
         when /^\/gettodaylec$/i
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
         when /^\/gettodaytut$/i
