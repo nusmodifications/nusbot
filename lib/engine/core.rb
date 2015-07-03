@@ -42,11 +42,24 @@ module NUSBotgram
       mods
     end
 
+    private
+
+    # If different NUSMods is sent, delete all the existing modules, then store the new modules.
+    def delete_hmods(hash_key)
+      results = @@redis.hgetall(hash_key)
+
+      results.each do |key, value|
+        @@redis.hdel(hash_key, key)
+      end
+    end
+
     public
 
     def retrieve_mod(uri, start_year, end_year, sem, *args)
       @@redis.select(0)
       telegram_id = args[0]
+      is_deleted = false
+      
       modules = callback(uri)
       uri_code = Addressable::URI.parse(uri).path[1, 9]
 
@@ -75,23 +88,51 @@ module NUSBotgram
           end_time = _key["EndTime"]
           venue = _key["Venue"]
 
+          hash_key = "users:#{telegram_id}.#{uri_code}"
+
           # Customized JSON hash
           # Replace JSON hash with `_key` returns the same result
           if class_no.eql?(value) && lesson_type[0, 3].upcase.eql?(module_type)
-            @@redis.hsetnx("users:#{telegram_id}:#{uri_code}",
-                           "#{DB_KEY}.#{telegram_id}.#{mod_code}#{module_type}.#{class_no}",
-                           { :uri => uri,
-                             :module_code => mod_code,
-                             :module_title => mod_title,
-                             :class_no => class_no,
-                             :week_text => week_text,
-                             :lesson_type => lesson_type,
-                             :day_text => day_text,
-                             :start_time => start_time,
-                             :end_time => end_time,
-                             :venue => venue,
-                             :lecture_periods => lecture_periods,
-                             :tutorial_periods => tutorial_periods })
+            code_check = @@redis.hget("users", telegram_id)
+            hkey = "users:#{telegram_id}.#{code_check}"
+
+            # Check if the same NUSMods URI shortened code exists,
+            # If it does, do nothing, else delete and replace with the new NUSMods URI shortened code
+            if uri_code != code_check && !is_deleted
+              delete_hmods(hkey)
+              @@redis.hset("users", telegram_id, uri_code)
+              is_deleted = true
+
+              @@redis.hsetnx("#{hash_key}",
+                             "#{uri_code}.#{telegram_id}.#{mod_code}#{module_type}.#{class_no}",
+                             {:uri => uri,
+                              :module_code => mod_code,
+                              :module_title => mod_title,
+                              :class_no => class_no,
+                              :week_text => week_text,
+                              :lesson_type => lesson_type,
+                              :day_text => day_text,
+                              :start_time => start_time,
+                              :end_time => end_time,
+                              :venue => venue,
+                              :lecture_periods => lecture_periods,
+                              :tutorial_periods => tutorial_periods})
+            else
+              @@redis.hsetnx("#{hash_key}",
+                             "#{uri_code}.#{telegram_id}.#{mod_code}#{module_type}.#{class_no}",
+                             {:uri => uri,
+                              :module_code => mod_code,
+                              :module_title => mod_title,
+                              :class_no => class_no,
+                              :week_text => week_text,
+                              :lesson_type => lesson_type,
+                              :day_text => day_text,
+                              :start_time => start_time,
+                              :end_time => end_time,
+                              :venue => venue,
+                              :lecture_periods => lecture_periods,
+                              :tutorial_periods => tutorial_periods})
+            end
           end
         end
       end
