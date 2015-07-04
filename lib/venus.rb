@@ -6,8 +6,8 @@ require_relative 'nus_botgram'
 
 module NUSBotgram
   class Venus
-    START_YEAR = 2014
-    END_YEAR = 2015
+    START_YEAR = 2015
+    END_YEAR = 2016
     SEM = 1
     DAY_REGEX = /([a-zA-Z]{6,})/
 
@@ -151,8 +151,11 @@ module NUSBotgram
 
           bot.update do |msg|
             mod_uri = msg.text
+            telegram_id = msg.from.id
+
             engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
 
+            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
             bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
           end
         when /^\/listmods$/i
@@ -172,9 +175,10 @@ module NUSBotgram
               mods.each do |key, value|
                 if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
                   formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-											       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                              [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
                   #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
+                  bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                   bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                 elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
                   daytime = engine.check_daytime(value[0]["start_time"])
@@ -184,13 +188,15 @@ module NUSBotgram
                   end
 
                   formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-											       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                              [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
                   #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
+                  bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                   bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                 end
               end
 
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
               bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
             end
           else
@@ -201,9 +207,10 @@ module NUSBotgram
             mods.each do |key, value|
               if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
                 formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-										       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                            [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
                 #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
+                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                 bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
               elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
                 daytime = engine.check_daytime(value[0]["start_time"])
@@ -213,13 +220,15 @@ module NUSBotgram
                 end
 
                 formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-										       [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                            [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
                 #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
+                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                 bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
               end
             end
 
+            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
             bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
           end
         when /^\/getmod$/i
@@ -232,6 +241,8 @@ module NUSBotgram
               telegram_id = msg.from.id
 
               engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
               bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
               bot.send_message(chat_id: msg.chat.id, text: "Alright! What modules do you want to search?", reply_markup: force_reply)
 
@@ -243,9 +254,10 @@ module NUSBotgram
                   if value[0]["module_code"].eql?(mod_code)
                     if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
                       formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-                             [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                                  [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
                       #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
+                      bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                       bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                     elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
                       daytime = engine.check_daytime(value[0]["start_time"])
@@ -255,14 +267,16 @@ module NUSBotgram
                       end
 
                       formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-                             [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                                  [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
                       #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
+                      bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                       bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                     end
                   end
                 end
 
+                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                 bot.send_message(chat_id: mod.chat.id, text: "There you go, #{mod.from.first_name}!")
               end
             end
@@ -279,9 +293,10 @@ module NUSBotgram
                 if value[0]["module_code"].eql?(mod_code)
                   if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
                     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-                            [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                                [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
                     #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
+                    bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                     bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                   elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
                     daytime = engine.check_daytime(value[0]["start_time"])
@@ -291,14 +306,16 @@ module NUSBotgram
                     end
 
                     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-                            [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                                [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
                     #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
+                    bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                     bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                   end
                 end
               end
 
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
               bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
             end
           end
@@ -314,6 +331,8 @@ module NUSBotgram
               telegram_id = msg.from.id
 
               engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
               bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
               bot.send_message(chat_id: msg.chat.id, text: "Alright! Let's get you your schedule for today!")
 
@@ -323,9 +342,10 @@ module NUSBotgram
                 if value[0]["day_text"].eql?(day_today)
                   if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
                     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-                            [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
-                            #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                                [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                    #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
+                    bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                     bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                   elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
                     daytime = engine.check_daytime(value[0]["start_time"])
@@ -335,9 +355,10 @@ module NUSBotgram
                     end
 
                     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-                            [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
-                            #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                                [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                    #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
+                    bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                     bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                   end
                 end
@@ -355,8 +376,8 @@ module NUSBotgram
               if value[0]["day_text"].eql?(day_today)
                 if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
                   formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-                          [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
-                          #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                              [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}
+                  #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
                   bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                 elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
@@ -367,8 +388,8 @@ module NUSBotgram
                   end
 
                   formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}
-                          [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
-                          #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                              [#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}
+                  #{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
                   bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                 end

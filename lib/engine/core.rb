@@ -10,7 +10,7 @@ module NUSBotgram
     DB_TOKEN = Digest::MD5.hexdigest(CONFIG[3][:DB_TOKEN])
     DB_KEY = Digest::MD5.hexdigest(CONFIG[3][:DB_KEY])
     API_ENDPOINT = 'http://api.nusmods.com/'
-    REDIRECT_ENDPOINT = 'http://nusmods.com/redirect.php?timetable='
+    REDIRECT_ENDPOINT = 'https://nusmods.com/redirect.php?timetable='
 
     def initialize
       @@redis = Redis.new(:host => CONFIG[2][:REDIS_HOST], :port => CONFIG[2][:REDIS_PORT], :db => 0)
