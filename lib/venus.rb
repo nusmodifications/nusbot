@@ -147,6 +147,7 @@ module NUSBotgram
           bot.send_message(chat_id: message.chat.id, text: "#{usage}")
         when /^\/setmodurl$/i
           force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+          bot.send_chat_action(chat_id: message.chat.id, action: "typing")
           bot.send_message(chat_id: message.chat.id, text: "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)", reply_markup: force_reply)
 
           bot.update do |msg|
@@ -157,7 +158,7 @@ module NUSBotgram
 
             if status == 404 || status.eql?("404")
               bot.send_chat_action(chat_id: message.chat.id, action: "typing")
-              bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid NUSMODS URL that I do not recognize. I am cancelling this operation because I do not understand what to process. Please try again to '/setmodurl' with a correct NUSMods URL.", disable_web_page_preview: true)
+              bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid NUSMODS URL that I do not recognize.\nI am cancelling this operation because I do not understand what to process.\nPlease try again to '/setmodurl' with a correct NUSMods URL.")
             else
               bot.send_chat_action(chat_id: message.chat.id, action: "typing")
               bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
@@ -166,6 +167,7 @@ module NUSBotgram
         when /^\/listmods$/i
           if !engine.db_exist(message.from.id)
             force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
             bot.send_message(chat_id: message.chat.id, text: "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)", reply_markup: force_reply)
 
             bot.update do |msg|
@@ -176,10 +178,12 @@ module NUSBotgram
 
               if status == 404 || status.eql?("404")
                 bot.send_chat_action(chat_id: message.chat.id, action: "typing")
-                bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid NUSMODS URL that I do not recognize. I am cancelling this operation because I do not understand what to process. Please try again to '/setmodurl' with a correct NUSMods URL.", disable_web_page_preview: true)
+                bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid NUSMODS URL that I do not recognize.\nI am cancelling this operation because I do not understand what to process.\nPlease try again to '/setmodurl' with a correct NUSMods URL.")
               else
                 bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Give me awhile, while I retrieve your timetable...")
 
                 mods = engine.get_mod(telegram_id)
@@ -209,6 +213,7 @@ module NUSBotgram
             end
           else
             telegram_id = message.from.id
+            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
             bot.send_message(chat_id: message.chat.id, text: "Give me awhile, while I retrieve your timetable...")
 
             mods = engine.get_mod(telegram_id)
@@ -241,6 +246,7 @@ module NUSBotgram
 
           if !engine.db_exist(message.from.id)
             force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
             bot.send_message(chat_id: message.chat.id, text: "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)", reply_markup: force_reply)
 
             bot.update do |msg|
@@ -251,11 +257,13 @@ module NUSBotgram
 
               if status == 404 || status.eql?("404")
                 bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid NUSMODS URL that I do not recognize. I am cancelling this operation because I do not understand what to process. Please try again to '/setmodurl' with a correct NUSMods URL.", disable_web_page_preview: true)
+                bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid NUSMODS URL that I do not recognize.\nI am cancelling this operation because I do not understand what to process.\nPlease try again to '/setmodurl' with a correct NUSMods URL.")
               else
                 bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
-                bot.send_message(chat_id: msg.chat.id, text: "Alright! What modules do you want to search?", reply_markup: force_reply)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+                bot.send_message(chat_id: msg.chat.id, text: "Alright! What module do you want me to display?", reply_markup: force_reply)
 
                 bot.update do |mod|
                   mods = engine.get_mod(telegram_id)
@@ -264,7 +272,7 @@ module NUSBotgram
                   mods.each do |key, value|
                     if !value[0]["module_code"].eql?(mod_code) && !display_once
                       bot.send_chat_action(chat_id: mod.chat.id, action: "typing")
-                      bot.send_message(chat_id: mod.chat.id, text: "I'm afraid this is an invalid module code which I am unable to process right now.\nThe reasons might be the following:\n1. You have entered a wrong module code,\n2. This module doesn't exist in my brain,\n3. You are trying to be funny...", disable_web_page_preview: true)
+                      bot.send_message(chat_id: mod.chat.id, text: "I'm afraid this is an invalid module code which I am unable to process right now.\nThe reasons might be the following:\n1. You have entered a wrong module code,\n2. This module doesn't exist in my brain,\n3. You are trying to be funny...")
                       display_once = true
                       alternate_reply = true
                     elsif value[0]["module_code"].eql?(mod_code)
@@ -301,6 +309,7 @@ module NUSBotgram
           else
             telegram_id = message.from.id
             force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
             bot.send_message(chat_id: message.chat.id, text: "Alright! What modules do you want to search?", reply_markup: force_reply)
 
             bot.update do |msg|
@@ -310,7 +319,7 @@ module NUSBotgram
               mods.each do |key, value|
                 if !value[0]["module_code"].eql?(mod_code) && !display_once
                   bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                  bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid module code which I am unable to process right now.\nThe reasons might be the following:\n1. You have entered a wrong module code,\n2. This module doesn't exist in my brain,\n3. You are trying to be funny...", disable_web_page_preview: true)
+                  bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid module code which I am unable to process right now.\nThe reasons might be the following:\n1. You have entered a wrong module code,\n2. This module doesn't exist in my brain,\n3. You are trying to be funny...")
                   display_once = true
                   alternate_reply = true
                 elsif value[0]["module_code"].eql?(mod_code)
@@ -345,10 +354,14 @@ module NUSBotgram
           end
         when /^\/today$/i
           day_of_week_regex = /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/
-          day_today = Time.now.strftime("%A")
+          day_today = "Monday"#Time.now.strftime("%A")
+          count = 0
+          display_once = false
+          free_schedule = false
 
           if !engine.db_exist(message.from.id)
             force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
             bot.send_message(chat_id: message.chat.id, text: "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)", reply_markup: force_reply)
 
             bot.update do |msg|
@@ -359,10 +372,12 @@ module NUSBotgram
 
               if status == 404 || status.eql?("404")
                 bot.send_chat_action(chat_id: message.chat.id, action: "typing")
-                bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid NUSMODS URL that I do not recognize. I am cancelling this operation because I do not understand what to process. Please try again to '/setmodurl' with a correct NUSMods URL.", disable_web_page_preview: true)
+                bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid NUSMODS URL that I do not recognize.\nI am cancelling this operation because I do not understand what to process.\nPlease try again to '/setmodurl' with a correct NUSMods URL.")
               else
                 bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Alright! Let's get you your schedule for today!")
 
                 mods = engine.get_mod(telegram_id)
@@ -389,11 +404,13 @@ module NUSBotgram
                   end
                 end
 
+                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
               end
             end
           else
             telegram_id = message.from.id
+            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
             bot.send_message(chat_id: message.chat.id, text: "Alright! Let's get you your schedule for today!")
 
             mods = engine.get_mod(telegram_id)
@@ -401,25 +418,40 @@ module NUSBotgram
             mods.each do |key, value|
               lp_size = value[0]["lecture_periods"].size
 
-              for i in 0..lp_size do
+              for i in 0...lp_size do
                 days_match = value[0]["lecture_periods"][i].to_s.match day_of_week_regex
 
+                puts "#{value[0]["module_code"]} : #{value[0]["class_no"]} #{value[0]["tutorial_periods"]} #{days_match}"
                 if days_match.to_s.eql?(day_today) || days_match == day_today
-                  if value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                  if value[0]["day_text"].eql?(day_today) || value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
                     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
                     bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                  elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                    daytime = engine.check_daytime(value[0]["start_time"])
-
-                    if daytime == 0
-                      daytime = 0
-                    end
-
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                   end
+                elsif value[0]["day_text"].eql?(day_today) || value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                  tp_size = value[0]["tutorial_periods"].size
+
+                  for j in 0...tp_size do
+                    tuts_match = value[0]["tutorial_periods"][i].to_s.match day_of_week_regex
+
+                    if tuts_match.to_s.eql?(day_today) || tuts_match == day_today
+                      formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][i]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+
+                      bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                    end
+                  end
+                  # daytime = engine.check_daytime(value[0]["start_time"])
+                  #
+                  # if daytime == 0
+                  #   daytime = 0
+                  # end
+                  #
+                  # formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                  #
+                  # bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                # elsif !days_match.to_s.eql?(day_today) || days_match != day_today && !display_once
+                #   count += 1
+                #   display_once = true
                   # elsif value[0]["day_text"].eql?(day_today)
                   #   if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
                   #     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
@@ -438,8 +470,18 @@ module NUSBotgram
                   #   end
                 end
               end
+
+              # Identify free day in schedule
+              if display_once && !free_schedule && count >= 5
+                sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
+                bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+                bot.send_message(chat_id: message.chat.id, text: "Today is your free day! Yipee!")
+                free_schedule = true
+              end
             end
 
+            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
             bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
           end
 
