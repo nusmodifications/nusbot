@@ -9,7 +9,7 @@ module NUSBotgram
     CONFIG = YAML.load_file("../lib/config/config.yml")
     DB_TOKEN = Digest::MD5.hexdigest(CONFIG[3][:DB_TOKEN])
     DB_KEY = Digest::MD5.hexdigest(CONFIG[3][:DB_KEY])
-    API_ENDPOINT = 'http://api.nusmods.com/'
+    API_ENDPOINT = 'https://api.nusmods.com/'
     REDIRECT_ENDPOINT = 'https://nusmods.com/redirect.php?timetable='
 
     def initialize
@@ -19,21 +19,42 @@ module NUSBotgram
     private
 
     def callback(uri)
-      _uri = REDIRECT_ENDPOINT + uri
+      uri_regex = /^(http|https).\/\/modsn.us\/*/i
+      noredirect_regex = /^(http|https).\/\/nusmods.com\/timetable\/*/i
+
+      modsn = uri.match uri_regex
+      nusmods = uri.match noredirect_regex
+
+      if !modsn && nusmods
+        mods = decode_uri(uri)
+
+        mods
+      elsif modsn && !nusmods
+        _uri = REDIRECT_ENDPOINT + uri
+
+        # Resolve NUSMods Shortened link
+        response = HTTParty.get(_uri)
+        result = response.body
+        json_result = JSON.parse(result)
+
+        # Retrieve the actual resolved link
+        redirect_url = json_result["redirectedUrl"]
+        resolved_url = CGI::unescape(redirect_url)
+
+        mods = decode_uri(resolved_url)
+
+        mods
+      elsif !modsn && !nusmods
+        "404"
+      end
+    end
+
+    private
+
+    def decode_uri(uri)
       mods = Hash.new
-
-      # Resolve NUSMods Shortened link
-      response = HTTParty.get(_uri)
-      result = response.body
-      json_result = JSON.parse(result)
-
-      # Retrieve the actual resolved link
-      redirect_url = json_result["redirectedUrl"]
-      resolved_url = CGI::unescape(redirect_url)
-
-      query_uri = Addressable::URI.parse(resolved_url)
-
-      mods_query = query_uri.query_values
+      decoded = Addressable::URI.parse(uri)
+      mods_query = decoded.query_values
 
       mods_query.each do |key, value|
         mods[key] = value
