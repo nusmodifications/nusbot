@@ -9,7 +9,7 @@ module NUSBotgram
     CONFIG = YAML.load_file("../lib/config/config.yml")
     DB_TOKEN = Digest::MD5.hexdigest(CONFIG[3][:DB_TOKEN])
     DB_KEY = Digest::MD5.hexdigest(CONFIG[3][:DB_KEY])
-    API_ENDPOINT = 'https://api.nusmods.com/'
+    API_ENDPOINT = 'https://api.nusmods.com'
     REDIRECT_ENDPOINT = 'https://nusmods.com/redirect.php?timetable='
 
     def initialize
@@ -98,7 +98,7 @@ module NUSBotgram
         module_code = key.match code_query
         module_type = unfreeze_key.sub!(code_query, "")[1, 3]
 
-        response = HTTParty.get("#{API_ENDPOINT}#{start_year}-#{end_year}/#{sem}/modules/#{module_code}.json")
+        response = HTTParty.get("#{API_ENDPOINT}/#{start_year}-#{end_year}/#{sem}/modules/#{module_code}.json")
         result = response.body
         json_result = JSON.parse(result)
 
