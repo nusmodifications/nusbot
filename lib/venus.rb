@@ -354,7 +354,7 @@ module NUSBotgram
           end
         when /^\/today$/i
           day_of_week_regex = /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/
-          day_today = "Monday"#Time.now.strftime("%A")
+          day_today = Time.now.strftime("%A")
           count = 0
           display_once = false
           free_schedule = false
@@ -421,53 +421,74 @@ module NUSBotgram
               for i in 0...lp_size do
                 days_match = value[0]["lecture_periods"][i].to_s.match day_of_week_regex
 
-                puts "#{value[0]["module_code"]} : #{value[0]["class_no"]} #{value[0]["tutorial_periods"]} #{days_match}"
-                if days_match.to_s.eql?(day_today) || days_match == day_today
-                  if value[0]["day_text"].eql?(day_today) || value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                if value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                  if days_match.to_s.eql?(day_today) || days_match == day_today
                     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
                     bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                   end
-                elsif value[0]["day_text"].eql?(day_today) || value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                  tp_size = value[0]["tutorial_periods"].size
+                end
 
-                  for j in 0...tp_size do
-                    tuts_match = value[0]["tutorial_periods"][i].to_s.match day_of_week_regex
+                # if days_match.to_s.eql?(day_today) || days_match == day_today
+                #   if value[0]["day_text"].eql?(day_today) || value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                #     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                #
+                #     bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                #   end
+                # elsif value[0]["day_text"].eql?(day_today) || value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                #   tp_size = value[0]["tutorial_periods"].size
+                #
+                #   for j in 0...tp_size do
+                #     tuts_match = value[0]["tutorial_periods"][i].to_s.match day_of_week_regex
+                #
+                #     if tuts_match.to_s.eql?(day_today) || tuts_match == day_today
+                #       formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][i]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                #
+                #       bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                #     end
+                #   end
+                #   # daytime = engine.check_daytime(value[0]["start_time"])
+                #   #
+                #   # if daytime == 0
+                #   #   daytime = 0
+                #   # end
+                #   #
+                #   # formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                #   #
+                #   # bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                # # elsif !days_match.to_s.eql?(day_today) || days_match != day_today && !display_once
+                # #   count += 1
+                # #   display_once = true
+                #   # elsif value[0]["day_text"].eql?(day_today)
+                #   #   if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                #   #     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                #   #
+                #   #     bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                #   #   elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                #   #     daytime = engine.check_daytime(value[0]["start_time"])
+                #   #
+                #   #     if daytime == 0
+                #   #       daytime = 0
+                #   #     end
+                #   #
+                #   #     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                #   #
+                #   #     bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                #   #   end
+                # end
+              end
 
-                    if tuts_match.to_s.eql?(day_today) || tuts_match == day_today
-                      formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][i]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+              if value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                tp_size = value[0]["tutorial_periods"].size
 
-                      bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    end
+                for j in 0...tp_size do
+                  tuts_match = value[0]["tutorial_periods"][i].to_s.match day_of_week_regex
+
+                  if tuts_match.to_s.eql?(day_today) || tuts_match == day_today
+                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][j]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+
+                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
                   end
-                  # daytime = engine.check_daytime(value[0]["start_time"])
-                  #
-                  # if daytime == 0
-                  #   daytime = 0
-                  # end
-                  #
-                  # formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-                  #
-                  # bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                # elsif !days_match.to_s.eql?(day_today) || days_match != day_today && !display_once
-                #   count += 1
-                #   display_once = true
-                  # elsif value[0]["day_text"].eql?(day_today)
-                  #   if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
-                  #     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-                  #
-                  #     bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                  #   elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                  #     daytime = engine.check_daytime(value[0]["start_time"])
-                  #
-                  #     if daytime == 0
-                  #       daytime = 0
-                  #     end
-                  #
-                  #     formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-                  #
-                  #     bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                  #   end
                 end
               end
 
