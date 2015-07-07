@@ -191,18 +191,12 @@ module NUSBotgram
                   mods_parsed = JSON.parse(key)
 
                   if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM")
-                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["lecture_periods"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                     bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                   elsif mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                    daytime = engine.check_daytime(mods_parsed[0]["start_time"])
-
-                    if daytime == 0
-                      daytime = 0
-                    end
-
-                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["tutorial_periods"][daytime - 1]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                     bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
