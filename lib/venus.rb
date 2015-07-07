@@ -370,13 +370,13 @@ module NUSBotgram
               status = engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
 
               if status == 404 || status.eql?("404")
-                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid NUSMODS URL that I do not recognize.\nI am cancelling this operation because I do not understand what to process.\nPlease try again to '/setmodurl' with a correct NUSMods URL.")
               else
-                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
 
-                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Alright! Let's get you your schedule for today!")
 
                 mods = engine.get_mod(telegram_id)
@@ -387,72 +387,72 @@ module NUSBotgram
                       if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       end
                     when "Tuesday"
                       if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       end
                     when "Wednesday"
                       if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       end
                     when "Thursday"
                       if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       end
                     when "Friday"
                       if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       end
                     when "Saturday"
                       if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
                         formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
 
-                        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                         count += 1
                       end
                     when "Sunday"

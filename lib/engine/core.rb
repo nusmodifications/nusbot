@@ -74,6 +74,29 @@ module NUSBotgram
 
     private
 
+    def find_keys(hash_key)
+      keys = @@redis.keys("#{hash_key}:*")
+
+      keys
+    end
+
+    private
+
+    def ldelete_keys(hash_key)
+      keys = find_keys(hash_key)
+      key_len = keys.size
+
+      for i in 0...key_len do
+        len = @@redis.llen(keys[i])
+
+        for j in 0...len do
+          @@redis.rpop(keys[i])
+        end
+      end
+    end
+
+    private
+
     # If different NUSMods is sent, delete all the existing modules, then store the new modules.
     def delete_hmods(hash_key)
       results = @@redis.hgetall(hash_key)
@@ -89,6 +112,7 @@ module NUSBotgram
       @@redis.select(0)
       telegram_id = args[0]
       is_deleted = false
+      count = 0
 
       modules = callback(uri)
 
@@ -131,39 +155,35 @@ module NUSBotgram
               # Check if the same NUSMods URI shortened code exists,
               # If it does, do nothing, else delete and replace with the new NUSMods URI shortened code
               if uri_code != code_check && !is_deleted
-                delete_hmods(hkey)
+                ldelete_keys(hkey)
                 @@redis.hset("users", telegram_id, uri_code)
                 is_deleted = true
 
-                @@redis.hsetnx("#{hash_key}",
-                               "#{uri_code}.#{telegram_id}.#{mod_code}#{module_type}.#{class_no}",
-                               [:uri => uri,
-                                :module_code => mod_code,
-                                :module_title => mod_title,
-                                :class_no => class_no,
-                                :week_text => week_text,
-                                :lesson_type => lesson_type,
-                                :day_text => day_text,
-                                :start_time => start_time,
-                                :end_time => end_time,
-                                :venue => venue,
-                                :lecture_periods => lecture_periods,
-                                :tutorial_periods => tutorial_periods].to_json)
+                @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
+                                                          :module_code => mod_code,
+                                                          :module_title => mod_title,
+                                                          :class_no => class_no,
+                                                          :week_text => week_text,
+                                                          :lesson_type => lesson_type,
+                                                          :day_text => day_text,
+                                                          :start_time => start_time,
+                                                          :end_time => end_time,
+                                                          :venue => venue,
+                                                          :lecture_periods => lecture_periods,
+                                                          :tutorial_periods => tutorial_periods].to_json)
               else
-                @@redis.hsetnx("#{hash_key}",
-                               "#{uri_code}.#{telegram_id}.#{mod_code}#{module_type}.#{class_no}",
-                               [:uri => uri,
-                                :module_code => mod_code,
-                                :module_title => mod_title,
-                                :class_no => class_no,
-                                :week_text => week_text,
-                                :lesson_type => lesson_type,
-                                :day_text => day_text,
-                                :start_time => start_time,
-                                :end_time => end_time,
-                                :venue => venue,
-                                :lecture_periods => lecture_periods,
-                                :tutorial_periods => tutorial_periods].to_json)
+                @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
+                                                          :module_code => mod_code,
+                                                          :module_title => mod_title,
+                                                          :class_no => class_no,
+                                                          :week_text => week_text,
+                                                          :lesson_type => lesson_type,
+                                                          :day_text => day_text,
+                                                          :start_time => start_time,
+                                                          :end_time => end_time,
+                                                          :venue => venue,
+                                                          :lecture_periods => lecture_periods,
+                                                          :tutorial_periods => tutorial_periods].to_json)
               end
             end
           end
@@ -206,40 +226,43 @@ module NUSBotgram
 
               # Check if the same NUSMods URI shortened code exists,
               # If it does, do nothing, else delete and replace with the new NUSMods URI shortened code
-              if uri_code != code_check && !is_deleted
-                delete_hmods(hkey)
-                @@redis.hset("users", telegram_id, uri_code)
-                is_deleted = true
+              if class_no.eql?(value) && lesson_type[0, 3].upcase.eql?(module_type)
+                code_check = @@redis.hget("users", telegram_id)
+                hkey = "users:#{telegram_id}.#{code_check}"
 
-                @@redis.hsetnx("#{hash_key}",
-                               "#{uri_code}.#{telegram_id}.#{mod_code}#{module_type}.#{class_no}",
-                               [:uri => uri,
-                                :module_code => mod_code,
-                                :module_title => mod_title,
-                                :class_no => class_no,
-                                :week_text => week_text,
-                                :lesson_type => lesson_type,
-                                :day_text => day_text,
-                                :start_time => start_time,
-                                :end_time => end_time,
-                                :venue => venue,
-                                :lecture_periods => lecture_periods,
-                                :tutorial_periods => tutorial_periods].to_json)
-              else
-                @@redis.hsetnx("#{hash_key}",
-                               "#{uri_code}.#{telegram_id}.#{mod_code}#{module_type}.#{class_no}",
-                               [:uri => uri,
-                                :module_code => mod_code,
-                                :module_title => mod_title,
-                                :class_no => class_no,
-                                :week_text => week_text,
-                                :lesson_type => lesson_type,
-                                :day_text => day_text,
-                                :start_time => start_time,
-                                :end_time => end_time,
-                                :venue => venue,
-                                :lecture_periods => lecture_periods,
-                                :tutorial_periods => tutorial_periods].to_json)
+                # Check if the same NUSMods URI shortened code exists,
+                # If it does, do nothing, else delete and replace with the new NUSMods URI shortened code
+                if uri_code != code_check && !is_deleted
+                  ldelete_keys(hkey)
+                  @@redis.hset("users", telegram_id, uri_code)
+                  is_deleted = true
+
+                  @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
+                                                            :module_code => mod_code,
+                                                            :module_title => mod_title,
+                                                            :class_no => class_no,
+                                                            :week_text => week_text,
+                                                            :lesson_type => lesson_type,
+                                                            :day_text => day_text,
+                                                            :start_time => start_time,
+                                                            :end_time => end_time,
+                                                            :venue => venue,
+                                                            :lecture_periods => lecture_periods,
+                                                            :tutorial_periods => tutorial_periods].to_json)
+                else
+                  @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
+                                                            :module_code => mod_code,
+                                                            :module_title => mod_title,
+                                                            :class_no => class_no,
+                                                            :week_text => week_text,
+                                                            :lesson_type => lesson_type,
+                                                            :day_text => day_text,
+                                                            :start_time => start_time,
+                                                            :end_time => end_time,
+                                                            :venue => venue,
+                                                            :lecture_periods => lecture_periods,
+                                                            :tutorial_periods => tutorial_periods].to_json)
+                end
               end
             end
           end
@@ -261,15 +284,24 @@ module NUSBotgram
       if !uri_code
         404
       else
-        results = @@redis.hgetall(hash_key)
+        keys = find_keys(hash_key)
+        key_len = keys.size
 
-        results.each do |key, value|
-          json_value = JSON.parse(@@redis.hget(hash_key, key))
-          modules_hash[key] = json_value
+        for i in 0...key_len do
+          len = @@redis.llen(keys[i])
+
+          for j in 0...len do
+            @@redis.lindex(keys[i], j)
+          end
         end
+
+        # results.each do |key, value|
+        #   json_value = JSON.parse(@@redis.hget(hash_key, key))
+        #   modules_hash[key] = json_value
+        # end
       end
 
-      modules_hash
+      # modules_hash
     end
 
     public
