@@ -112,7 +112,6 @@ module NUSBotgram
       @@redis.select(0)
       telegram_id = args[0]
       is_deleted = false
-      count = 0
 
       modules = callback(uri)
 
@@ -226,43 +225,36 @@ module NUSBotgram
 
               # Check if the same NUSMods URI shortened code exists,
               # If it does, do nothing, else delete and replace with the new NUSMods URI shortened code
-              if class_no.eql?(value) && lesson_type[0, 3].upcase.eql?(module_type)
-                code_check = @@redis.hget("users", telegram_id)
-                hkey = "users:#{telegram_id}.#{code_check}"
+              if uri_code != code_check && !is_deleted
+                ldelete_keys(hkey)
+                @@redis.hset("users", telegram_id, uri_code)
+                is_deleted = true
 
-                # Check if the same NUSMods URI shortened code exists,
-                # If it does, do nothing, else delete and replace with the new NUSMods URI shortened code
-                if uri_code != code_check && !is_deleted
-                  ldelete_keys(hkey)
-                  @@redis.hset("users", telegram_id, uri_code)
-                  is_deleted = true
-
-                  @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
-                                                            :module_code => mod_code,
-                                                            :module_title => mod_title,
-                                                            :class_no => class_no,
-                                                            :week_text => week_text,
-                                                            :lesson_type => lesson_type,
-                                                            :day_text => day_text,
-                                                            :start_time => start_time,
-                                                            :end_time => end_time,
-                                                            :venue => venue,
-                                                            :lecture_periods => lecture_periods,
-                                                            :tutorial_periods => tutorial_periods].to_json)
-                else
-                  @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
-                                                            :module_code => mod_code,
-                                                            :module_title => mod_title,
-                                                            :class_no => class_no,
-                                                            :week_text => week_text,
-                                                            :lesson_type => lesson_type,
-                                                            :day_text => day_text,
-                                                            :start_time => start_time,
-                                                            :end_time => end_time,
-                                                            :venue => venue,
-                                                            :lecture_periods => lecture_periods,
-                                                            :tutorial_periods => tutorial_periods].to_json)
-                end
+                @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
+                                                          :module_code => mod_code,
+                                                          :module_title => mod_title,
+                                                          :class_no => class_no,
+                                                          :week_text => week_text,
+                                                          :lesson_type => lesson_type,
+                                                          :day_text => day_text,
+                                                          :start_time => start_time,
+                                                          :end_time => end_time,
+                                                          :venue => venue,
+                                                          :lecture_periods => lecture_periods,
+                                                          :tutorial_periods => tutorial_periods].to_json)
+              else
+                @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
+                                                          :module_code => mod_code,
+                                                          :module_title => mod_title,
+                                                          :class_no => class_no,
+                                                          :week_text => week_text,
+                                                          :lesson_type => lesson_type,
+                                                          :day_text => day_text,
+                                                          :start_time => start_time,
+                                                          :end_time => end_time,
+                                                          :venue => venue,
+                                                          :lecture_periods => lecture_periods,
+                                                          :tutorial_periods => tutorial_periods].to_json)
               end
             end
           end
@@ -276,7 +268,7 @@ module NUSBotgram
 
     def get_mod(telegram_id)
       @@redis.select(0)
-      modules_hash = Hash.new
+      modules_ary = Array.new
 
       uri_code = @@redis.hget("users", telegram_id)
       hash_key = "users:#{telegram_id}.#{uri_code}"
@@ -291,17 +283,12 @@ module NUSBotgram
           len = @@redis.llen(keys[i])
 
           for j in 0...len do
-            @@redis.lindex(keys[i], j)
+            modules_ary.push(@@redis.lindex(keys[i], j))
           end
         end
-
-        # results.each do |key, value|
-        #   json_value = JSON.parse(@@redis.hget(hash_key, key))
-        #   modules_hash[key] = json_value
-        # end
       end
 
-      # modules_hash
+      modules_ary
     end
 
     public

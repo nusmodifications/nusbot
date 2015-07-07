@@ -177,37 +177,39 @@ module NUSBotgram
               status = engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
 
               if status == 404 || status.eql?("404")
-                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid NUSMODS URL that I do not recognize.\nI am cancelling this operation because I do not understand what to process.\nPlease try again to '/setmodurl' with a correct NUSMods URL.")
               else
-                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
 
-                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Give me awhile, while I retrieve your timetable...")
 
                 mods = engine.get_mod(telegram_id)
-                mods.each do |key, value|
-                  if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                mods.each do |key|
+                  mods_parsed = JSON.parse(key)
 
-                    bot.send_chat_action(chat_id: message.chat.id, action: "typing")
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                  elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                    daytime = engine.check_daytime(value[0]["start_time"])
+                  if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["lecture_periods"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+
+                    bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                    bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
+                  elsif mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                    daytime = engine.check_daytime(mods_parsed[0]["start_time"])
 
                     if daytime == 0
                       daytime = 0
                     end
 
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["tutorial_periods"][daytime - 1]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-                    bot.send_chat_action(chat_id: message.chat.id, action: "typing")
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+                    bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                    bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                   end
                 end
 
-                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
               end
             end
@@ -217,20 +219,16 @@ module NUSBotgram
             bot.send_message(chat_id: message.chat.id, text: "Give me awhile, while I retrieve your timetable...")
 
             mods = engine.get_mod(telegram_id)
-            mods.each do |key, value|
-              if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
-                formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+            mods.each do |key|
+              mods_parsed = JSON.parse(key)
+
+              if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
                 bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                 bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-              elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                daytime = engine.check_daytime(value[0]["start_time"])
-
-                if daytime == 0
-                  daytime = 0
-                end
-
-                formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+              elsif mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
                 bot.send_chat_action(chat_id: message.chat.id, action: "typing")
                 bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
@@ -243,6 +241,7 @@ module NUSBotgram
         when /^\/getmod$/i
           display_once = false
           alternate_reply = false
+          count = 0
 
           if !engine.db_exist(message.from.id)
             force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
@@ -262,47 +261,52 @@ module NUSBotgram
                 bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
 
-                bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Alright! What module do you want me to display?", reply_markup: force_reply)
 
                 bot.update do |mod|
                   mods = engine.get_mod(telegram_id)
                   mod_code = mod.text.upcase
 
-                  mods.each do |key, value|
-                    if !value[0]["module_code"].eql?(mod_code) && !display_once
-                      bot.send_chat_action(chat_id: mod.chat.id, action: "typing")
-                      bot.send_message(chat_id: mod.chat.id, text: "I'm afraid this is an invalid module code which I am unable to process right now.\nThe reasons might be the following:\n1. You have entered a wrong module code,\n2. This module doesn't exist in my brain,\n3. You are trying to be funny...")
+                  mods.each do |key|
+                    mods_parsed = JSON.parse(key)
+
+                    if !mods_parsed[0]["module_code"].eql?(mod_code) && !display_once
                       display_once = true
                       alternate_reply = true
-                    elsif value[0]["module_code"].eql?(mod_code)
-                      if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                        bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                      elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                        daytime = engine.check_daytime(value[0]["start_time"])
-
-                        if daytime == 0
-                          daytime = 0
-                        end
-
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                    elsif mods_parsed[0]["module_code"].eql?(mod_code)
+                      if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                        formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
                         bot.send_chat_action(chat_id: mod.chat.id, action: "typing")
                         bot.send_message(chat_id: mod.chat.id, text: "#{formatted}")
+
+                        count += 1
+                      elsif mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                        formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+
+                        bot.send_chat_action(chat_id: mod.chat.id, action: "typing")
+                        bot.send_message(chat_id: mod.chat.id, text: "#{formatted}")
+
+                        count += 1
                       end
                     end
                   end
                 end
 
-                if !alternate_reply
+                if !alternate_reply || count > 0
                   bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                   bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
-                else
+                elsif display_once && alternate_reply && count == 0
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid module code which I am unable to process right now.\nThe reasons might be the following:\n1. You have entered a wrong module code,\n2. This module doesn't exist in my brain,\n3. You are trying to be funny...")
+
                   bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                   bot.send_message(chat_id: msg.chat.id, text: "Please try again, #{msg.from.first_name}!")
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+                  bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
                 end
               end
             end
@@ -316,39 +320,42 @@ module NUSBotgram
               mods = engine.get_mod(telegram_id)
               mod_code = msg.text.upcase
 
-              mods.each do |key, value|
-                if !value[0]["module_code"].eql?(mod_code) && !display_once
-                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                  bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid module code which I am unable to process right now.\nThe reasons might be the following:\n1. You have entered a wrong module code,\n2. This module doesn't exist in my brain,\n3. You are trying to be funny...")
+              mods.each do |key|
+                mods_parsed = JSON.parse(key)
+
+                if !mods_parsed[0]["module_code"].eql?(mod_code) && !display_once
                   display_once = true
                   alternate_reply = true
-                elsif value[0]["module_code"].eql?(mod_code)
-                  if value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM")
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                elsif mods_parsed[0]["module_code"].eql?(mod_code)
+                  if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM")
+                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                     bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                  elsif value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                    daytime = engine.check_daytime(value[0]["start_time"])
-
-                    if daytime == 0
-                      daytime = 0
-                    end
-
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"][daytime - 1]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                    count += 1
+                  elsif mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                     bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
+                    count += 1
                   end
                 end
               end
 
-              if !alternate_reply
+              if !alternate_reply || count > 0
                 bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
-              else
+              elsif display_once && alternate_reply && count == 0
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid module code which I am unable to process right now.\nThe reasons might be the following:\n1. You have entered a wrong module code,\n2. This module doesn't exist in my brain,\n3. You are trying to be funny...")
+
                 bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Please try again, #{msg.from.first_name}!")
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+                bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
               end
             end
           end
@@ -356,6 +363,7 @@ module NUSBotgram
           day_of_week_regex = /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/
           day_today = Time.now.strftime("%A")
           count = 0
+          display_once = false
           free_schedule = false
 
           if !engine.db_exist(message.from.id)
@@ -381,91 +389,31 @@ module NUSBotgram
 
                 mods = engine.get_mod(telegram_id)
 
-                mods.each do |key, value|
-                  case value[0]["day_text"]
-                    when "Monday"
-                      if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                mods.each do |key|
+                  mods_parsed = JSON.parse(key)
 
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                  if mods_parsed[0]["day_text"].eql?(day_today)
+                    if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                      formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      end
-                    when "Tuesday"
-                      if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                      bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
 
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      end
-                    when "Wednesday"
-                      if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      end
-                    when "Thursday"
-                      if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      end
-                    when "Friday"
-                      if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      end
-                    when "Saturday"
-                      if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                        formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                        bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                        count += 1
-                      end
-                    when "Sunday"
+                      count += 1
+                    else
+                      free_schedule = true
+                    end
                   end
                 end
 
                 # Identify free day in schedule
-                if !free_schedule && count == 0
+                if !free_schedule || count > 0
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
+                elsif free_schedule && count == 0
                   sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
                   bot.send_sticker(chat_id: msg.chat.id, sticker: sticker_id)
 
                   bot.send_message(chat_id: msg.chat.id, text: "Yay! It's YOUR free day! Hang around and chill with me!")
-                  free_schedule = true
                 end
 
                 bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
@@ -479,91 +427,31 @@ module NUSBotgram
 
             mods = engine.get_mod(telegram_id)
 
-            mods.each do |key, value|
-              case value[0]["day_text"]
-                when "Monday"
-                  if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+            mods.each do |key|
+              mods_parsed = JSON.parse(key)
 
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+              if mods_parsed[0]["day_text"].eql?(day_today) && !display_once
+                if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
+                  formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  end
-                when "Tuesday"
-                  if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
+                  bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
 
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  end
-                when "Wednesday"
-                  if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  end
-                when "Thursday"
-                  if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  end
-                when "Friday"
-                  if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  end
-                when "Saturday"
-                  if value[0]["day_text"].eql?(day_today) && (value[0]["lesson_type"][0, 3].upcase.eql?("LEC") || value[0]["lesson_type"][0, 3].upcase.eql?("SEM"))
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["lecture_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  elsif value[0]["day_text"].eql?(day_today) && value[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                    formatted = "#{value[0]["module_code"]} - #{value[0]["module_title"]}\n[#{value[0]["lesson_type"][0, 3].upcase}][#{value[0]["class_no"]}]: #{value[0]["tutorial_periods"]}\n#{value[0]["start_time"]} - #{value[0]["end_time"]} @ #{value[0]["venue"]}"
-
-                    bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-                    count += 1
-                  end
-                when "Sunday"
+                  count += 1
+                else
+                  free_schedule = true
+                end
               end
-            end
 
-            # Identify free day in schedule
-            if !free_schedule && count == 0
-              sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
-              bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-              bot.send_message(chat_id: message.chat.id, text: "Yay! It's YOUR free day! Hang around and chill with me!")
-              free_schedule = true
+              # Identify free day in schedule
+              # if !free_schedule || count > 0
+              #   bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              #   bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+              # elsif free_schedule && count == 0
+              #   sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
+              #   bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+              #
+              #   bot.send_message(chat_id: message.chat.id, text: "Yay! It's YOUR free day! Hang around and chill with me!")
+              # end
             end
 
             bot.send_chat_action(chat_id: message.chat.id, action: "typing")
