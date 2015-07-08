@@ -449,8 +449,127 @@ module NUSBotgram
               bot.send_message(chat_id: message.chat.id, text: "Yay! It's YOUR free day! Hang around and chill with me!")
             end
           end
-        when /^\/gettodaylec$/i
-          bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
+        when /^\/todaylec$/i
+          day_today = Time.now.strftime("%A")
+          days_ary = Array.new
+          mods_ary = Array.new
+
+          if !engine.db_exist(message.from.id)
+            force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+            bot.send_message(chat_id: message.chat.id, text: "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)", reply_markup: force_reply)
+
+            bot.update do |msg|
+              mod_uri = msg.text
+              telegram_id = msg.from.id
+
+              status = engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+
+              if status == 404 || status.eql?("404")
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid NUSMODS URL that I do not recognize.\nI am cancelling this operation because I do not understand what to process.\nPlease try again to '/setmodurl' with a correct NUSMods URL.")
+              else
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                bot.send_message(chat_id: msg.chat.id, text: "Awesome! I have registered your NUSMods URL @ #{mod_uri}", disable_web_page_preview: true)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                bot.send_message(chat_id: msg.chat.id, text: "Alright! Let's get you your schedule for today!")
+
+                mods = engine.get_mod(telegram_id)
+
+                mods.each do |key|
+                  mods_parsed = JSON.parse(key)
+
+                  days_ary.push(mods_parsed[0]["day_text"])
+                  mods_ary.push(mods_parsed[0]["lesson_type"])
+
+                  if mods_parsed[0]["day_text"].eql?(day_today) && mods_parsed[0]["lesson_type"].eql?("Lecture")
+                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+
+                    bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
+                  end
+                end
+
+                # Identify free day in schedule
+                if days_ary.uniq.include?(day_today) && mods_ary.uniq.include?("Lecture")
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
+                elsif !days_ary.uniq.include?(day_today) && day_today.eql?("Saturday")
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  sticker_id = sticker_collections[0][:ONE_DOESNT_SIMPLY_SEND_A_TOLKIEN_STICKER]
+                  bot.send_sticker(chat_id: msg.chat.id, sticker: sticker_id)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  bot.send_message(chat_id: msg.chat.id, text: "One does not simply have classes on Saturday!")
+                elsif !days_ary.uniq.include?(day_today) && day_today.eql?("Sunday")
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+                  bot.send_sticker(chat_id: msg.chat.id, sticker: sticker_id)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  bot.send_message(chat_id: msg.chat.id, text: "You've got to be kidding! It's Sunday, you shouldn't have any classes today!")
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  bot.send_message(chat_id: msg.chat.id, text: "C'mon, have a break, will ya?")
+                elsif !days_ary.uniq.include?(day_today) && !mods_ary.uniq.include?("Lecture")
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
+                  bot.send_sticker(chat_id: msg.chat.id, sticker: sticker_id)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  bot.send_message(chat_id: msg.chat.id, text: "It seems like you are either not taking or do not have any Lectures today!")
+                end
+              end
+            end
+          else
+            telegram_id = message.from.id
+            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+            bot.send_message(chat_id: message.chat.id, text: "Alright! Let's get you your schedule for today!")
+
+            mods = engine.get_mod(telegram_id)
+
+            mods.each do |key|
+              mods_parsed = JSON.parse(key)
+
+              days_ary.push(mods_parsed[0]["day_text"])
+              mods_ary.push(mods_parsed[0]["lesson_type"])
+
+              if mods_parsed[0]["day_text"].eql?(day_today) && mods_parsed[0]["lesson_type"].eql?("Lecture")
+                formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+
+                bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+              end
+            end
+
+            if days_ary.uniq.include?(day_today) && mods_ary.uniq.include?("Lecture")
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+            elsif !days_ary.uniq.include?(day_today) && day_today.eql?("Saturday")
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              sticker_id = sticker_collections[0][:ONE_DOESNT_SIMPLY_SEND_A_TOLKIEN_STICKER]
+              bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              bot.send_message(chat_id: message.chat.id, text: "One does not simply have classes on Saturday!")
+            elsif !days_ary.uniq.include?(day_today) && day_today.eql?("Sunday")
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+              bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              bot.send_message(chat_id: message.chat.id, text: "You've got to be kidding! It's Sunday, you shouldn't have any classes today!")
+
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              bot.send_message(chat_id: message.chat.id, text: "C'mon, have a break, will ya?")
+            elsif !days_ary.uniq.include?(day_today) && !mods_ary.uniq.include?("Lecture")
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
+              bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              bot.send_message(chat_id: message.chat.id, text: "It seems like you are either not taking or do not have any Lectures today!")
+            end
+          end
         when /^\/gettodaytut$/i
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
         when /^\/gettodaylab$/i
