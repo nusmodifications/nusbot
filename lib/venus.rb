@@ -233,9 +233,7 @@ module NUSBotgram
             bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
           end
         when /^\/getmod$/i
-          display_once = false
-          alternate_reply = false
-          count = 0
+          mods_ary = Array.new
 
           if !engine.db_exist(message.from.id)
             force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
@@ -265,42 +263,30 @@ module NUSBotgram
                   mods.each do |key|
                     mods_parsed = JSON.parse(key)
 
-                    if !mods_parsed[0]["module_code"].eql?(mod_code) && !display_once
-                      display_once = true
-                      alternate_reply = true
-                    elsif mods_parsed[0]["module_code"].eql?(mod_code)
-                      if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM")
-                        formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+                    mods_ary.push(mods_parsed[0]["module_code"])
 
-                        bot.send_chat_action(chat_id: mod.chat.id, action: "typing")
-                        bot.send_message(chat_id: mod.chat.id, text: "#{formatted}")
+                    if mods_parsed[0]["module_code"].eql?(mod_code)
+                      formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-                        count += 1
-                      elsif mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                        formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
-
-                        bot.send_chat_action(chat_id: mod.chat.id, action: "typing")
-                        bot.send_message(chat_id: mod.chat.id, text: "#{formatted}")
-
-                        count += 1
-                      end
+                      bot.send_chat_action(chat_id: mod.chat.id, action: "typing")
+                      bot.send_message(chat_id: mod.chat.id, text: "#{formatted}")
                     end
                   end
-                end
 
-                if !alternate_reply || count > 0
-                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                  bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
-                elsif display_once && alternate_reply && count == 0
-                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                  bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid module code which I am unable to process right now.\nThe reasons might be the following:\n1. You have entered a wrong module code,\n2. This module doesn't exist in my brain,\n3. You are trying to be funny...")
+                  if mods_ary.uniq.include?(mod_code)
+                    bot.send_chat_action(chat_id: mod.chat.id, action: "typing")
+                    bot.send_message(chat_id: mod.chat.id, text: "There you go, #{mod.from.first_name}!")
+                  else
+                    bot.send_chat_action(chat_id: mod.chat.id, action: "typing")
+                    sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+                    bot.send_sticker(chat_id: mod.chat.id, sticker: sticker_id)
 
-                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                  bot.send_message(chat_id: msg.chat.id, text: "Please try again, #{msg.from.first_name}!")
+                    bot.send_chat_action(chat_id: mod.chat.id, action: "typing")
+                    bot.send_message(chat_id: mod.chat.id, text: "I'm afraid this is an invalid module code which I am unable to process right now.\nThe reasons might be the following:\n1. You have entered a wrong module code,\n2. This module doesn't exist in my brain,\n3. You are trying to be funny...")
 
-                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                  sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
-                  bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+                    bot.send_chat_action(chat_id: mod.chat.id, action: "typing")
+                    bot.send_message(chat_id: mod.chat.id, text: "Please try again, #{mod.from.first_name}!")
+                  end
                 end
               end
             end
@@ -317,39 +303,29 @@ module NUSBotgram
               mods.each do |key|
                 mods_parsed = JSON.parse(key)
 
-                if !mods_parsed[0]["module_code"].eql?(mod_code) && !display_once
-                  display_once = true
-                  alternate_reply = true
-                elsif mods_parsed[0]["module_code"].eql?(mod_code)
-                  if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM")
-                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+                mods_ary.push(mods_parsed[0]["module_code"])
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                    bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                    count += 1
-                  elsif mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+                if mods_parsed[0]["module_code"].eql?(mod_code)
+                  formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                    bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
-                    count += 1
-                  end
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                 end
               end
 
-              if !alternate_reply || count > 0
+              if mods_ary.uniq.include?(mod_code)
                 bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
-              elsif display_once && alternate_reply && count == 0
+              else
+                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+                bot.send_sticker(chat_id: msg.chat.id, sticker: sticker_id)
+
                 bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "I'm afraid this is an invalid module code which I am unable to process right now.\nThe reasons might be the following:\n1. You have entered a wrong module code,\n2. This module doesn't exist in my brain,\n3. You are trying to be funny...")
 
                 bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                 bot.send_message(chat_id: msg.chat.id, text: "Please try again, #{msg.from.first_name}!")
-
-                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
-                bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
               end
             end
           end
