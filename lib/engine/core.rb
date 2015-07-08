@@ -170,6 +170,23 @@ module NUSBotgram
                                                           :venue => venue,
                                                           :lecture_periods => lecture_periods,
                                                           :tutorial_periods => tutorial_periods].to_json)
+              elsif uri_code == code_check && !is_deleted
+                ldelete_keys(hkey)
+                @@redis.hset("users", telegram_id, uri_code)
+                is_deleted = true
+
+                @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
+                                                          :module_code => mod_code,
+                                                          :module_title => mod_title,
+                                                          :class_no => class_no,
+                                                          :week_text => week_text,
+                                                          :lesson_type => lesson_type,
+                                                          :day_text => day_text,
+                                                          :start_time => start_time,
+                                                          :end_time => end_time,
+                                                          :venue => venue,
+                                                          :lecture_periods => lecture_periods,
+                                                          :tutorial_periods => tutorial_periods].to_json)
               else
                 @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
                                                           :module_code => mod_code,
@@ -226,6 +243,23 @@ module NUSBotgram
               # Check if the same NUSMods URI shortened code exists,
               # If it does, do nothing, else delete and replace with the new NUSMods URI shortened code
               if uri_code != code_check && !is_deleted
+                ldelete_keys(hkey)
+                @@redis.hset("users", telegram_id, uri_code)
+                is_deleted = true
+
+                @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
+                                                          :module_code => mod_code,
+                                                          :module_title => mod_title,
+                                                          :class_no => class_no,
+                                                          :week_text => week_text,
+                                                          :lesson_type => lesson_type,
+                                                          :day_text => day_text,
+                                                          :start_time => start_time,
+                                                          :end_time => end_time,
+                                                          :venue => venue,
+                                                          :lecture_periods => lecture_periods,
+                                                          :tutorial_periods => tutorial_periods].to_json)
+              elsif uri_code == code_check && !is_deleted
                 ldelete_keys(hkey)
                 @@redis.hset("users", telegram_id, uri_code)
                 is_deleted = true
