@@ -47,21 +47,12 @@ module NUSBotgram
     end
 
     def send_message(params)
-      params_validation = {
-          chat_id: { required: true, class: [Fixnum] },
+      strict_params_validation = {
           text: { required: true, class: [String] },
-          disable_web_page_preview: { required: false, class: [TrueClass, FalseClass] },
-          reply_to_message_id: { required: false, class: [Fixnum] },
-          reply_markup: { required: false, class: [
-              NUSBotgram::DataTypes::ReplyKeyboardMarkup,
-              NUSBotgram::DataTypes::ReplyKeyboardHide,
-              NUSBotgram::DataTypes::ForceReply,
-          ] }
+          disable_web_page_preview: { required: false, class: [TrueClass, FalseClass] }
       }
 
-      response = api_request("sendMessage", params, params_validation)
-
-      NUSBotgram::DataTypes::Message.new(response.result)
+      send_method(:message, params, strict_params_validation)
     end
 
     def forward_message(params)
@@ -77,107 +68,53 @@ module NUSBotgram
     end
 
     def send_photo(params)
-      params_validation = {
-          chat_id: { required: true, class: [Fixnum] },
-          photo: { required: true, class: [File, String] },
-          caption: { required: false, class: [String] },
-          reply_to_message_id: { required: false, class: [String] },
-          reply_markup: { required: false, class: [
-              NUSBotgram::DataTypes::ReplyKeyboardMarkup,
-              NUSBotgram::DataTypes::ReplyKeyboardHide,
-              NUSBotgram::DataTypes::ForceReply,
-          ] }
+      strict_params_validation = {
+          photo: { required: false, class: [File, String] },
+          caption: { required: false, class: [String] }
       }
 
-      response = api_request("sendPhoto", params, params_validation)
-
-      NUSBotgram::DataTypes::Message.new(response.result)
+      send_method(:photo, params, strict_params_validation)
     end
 
     def send_audio(params)
-      params_validation = {
-          chat_id: { required: true, class: [Fixnum] },
-          audio: { required: true, class: [File, String] },
-          reply_to_message_id: { required: false, class: [String] },
-          reply_markup: { required: false, class: [
-              NUSBotgram::DataTypes::ReplyKeyboardMarkup,
-              NUSBotgram::DataTypes::ReplyKeyboardHide,
-              NUSBotgram::DataTypes::ForceReply,
-          ] }
+      strict_params_validation = {
+          audio: { required: false, class: [File, String] }
       }
 
-      response = api_request("sendAudio", params, params_validation)
-
-      NUSBotgram::DataTypes::Message.new(response.result)
+      send_method(:audio, params, strict_params_validation)
     end
 
     def send_document(params)
-      params_validation = {
-          chat_id: { required: true, class: [Fixnum] },
-          document: { required: false, class: [File, String] },
-          reply_to_message_id: { required: false, class: [String] },
-          reply_markup: { required: false, class: [
-              NUSBotgram::DataTypes::ReplyKeyboardMarkup,
-              NUSBotgram::DataTypes::ReplyKeyboardHide,
-              NUSBotgram::DataTypes::ForceReply,
-          ] }
+      strict_params_validation = {
+          document: { required: false, class: [File, String] }
       }
 
-      response = api_request("sendDocument", params, params_validation)
-
-      NUSBotgram::DataTypes::Message.new(response.result)
+      send_method(:document, params, strict_params_validation)
     end
 
     def send_sticker(params)
-      params_validation = {
-          chat_id: { required: true, class: [Fixnum] },
-          sticker: { required: true, class: [File, String] },
-          reply_to_message_id: { required: false, class: [String] },
-          reply_markup: { required: false, class: [
-              NUSBotgram::DataTypes::ReplyKeyboardMarkup,
-              NUSBotgram::DataTypes::ReplyKeyboardHide,
-              NUSBotgram::DataTypes::ForceReply,
-          ] }
+      strict_params_validation = {
+          sticker: { required: true, class: [File, String] }
       }
 
-      response = api_request("sendSticker", params, params_validation)
-
-      NUSBotgram::DataTypes::Message.new(response.result)
+      send_method(:sticker, params, strict_params_validation)
     end
 
     def send_video(params)
-      params_validation = {
-          chat_id: { required: true, class: [Fixnum] },
-          video: { required: true, class: [File, String] },
-          reply_to_message_id: { required: false, class: [String] },
-          reply_markup: { required: false, class: [
-              NUSBotgram::DataTypes::ReplyKeyboardMarkup,
-              NUSBotgram::DataTypes::ReplyKeyboardHide,
-              NUSBotgram::DataTypes::ForceReply,
-          ] }
+      strict_params_validation = {
+          video: { required: true, class: [File, String] }
       }
 
-      response = api_request("sendVideo", params, params_validation)
-
-      NUSBotgram::DataTypes::Message.new(response.result)
+      send_method(:video, params, strict_params_validation)
     end
 
     def send_location(params)
-      params_validation = {
-          chat_id: { required: true, class: [Fixnum] },
+      strict_params_validation = {
           latitude: { required: true, class: [Float] },
-          longitude: { required: true, class: [Float] },
-          reply_to_message_id: { required: false, class: [String] },
-          reply_markup: { required: false, class: [
-              NUSBotgram::DataTypes::ReplyKeyboardMarkup,
-              NUSBotgram::DataTypes::ReplyKeyboardHide,
-              NUSBotgram::DataTypes::ForceReply,
-          ] }
+          longitude: { required: true, class: [Float] }
       }
 
-      response = api_request("sendLocation", params, params_validation)
-
-      NUSBotgram::DataTypes::Message.new(response.result)
+      send_method(:location, params, strict_params_validation)
     end
 
     def send_chat_action(params)
@@ -245,6 +182,22 @@ module NUSBotgram
       )
 
       ApiResponse.new(response)
+    end
+
+    def send_method(object_kind, params, strict_params_validation = {})
+      params_validation = {
+          chat_id: { required: true, class: [Fixnum] },
+          reply_to_message_id: { required: false, class: [String] },
+          reply_markup: { required: false, class: [
+              NUSBotgram::DataTypes::ReplyKeyboardMarkup,
+              NUSBotgram::DataTypes::ReplyKeyboardHide,
+              NUSBotgram::DataTypes::ForceReply,
+          ] }
+      }
+
+      response = api_request("send#{object_kind.to_s.capitalize}", params, strict_params_validation.merge(params_validation))
+
+      NUSBotgram::DataTypes::Message.new(response.result)
     end
   end
 end
