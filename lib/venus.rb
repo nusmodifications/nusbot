@@ -356,9 +356,7 @@ module NUSBotgram
         when /^\/today$/i
           day_of_week_regex = /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/
           day_today = Time.now.strftime("%A")
-          count = 0
-          display_once = false
-          free_schedule = false
+          days_ary = Array.new
 
           if !engine.db_exist(message.from.id)
             force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
@@ -386,32 +384,44 @@ module NUSBotgram
                 mods.each do |key|
                   mods_parsed = JSON.parse(key)
 
+                  days_ary.push(mods_parsed[0]["day_text"])
+
                   if mods_parsed[0]["day_text"].eql?(day_today)
-                    if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                      formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+                    formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-                      bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-
-                      count += 1
-                    else
-                      free_schedule = true
-                    end
+                    bot.send_message(chat_id: msg.chat.id, text: "#{formatted}")
                   end
                 end
 
                 # Identify free day in schedule
-                if !free_schedule || count > 0
+                if days_ary.uniq.include?(day_today)
                   bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                   bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
-                elsif free_schedule && count == 0
+                elsif !days_ary.uniq.include?(day_today) && day_today.eql?("Saturday")
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  sticker_id = sticker_collections[0][:ONE_DOESNT_SIMPLY_SEND_A_TOLKIEN_STICKER]
+                  bot.send_sticker(chat_id: msg.chat.id, sticker: sticker_id)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  bot.send_message(chat_id: msg.chat.id, text: "One does not simply have classes on Saturday!")
+                elsif !days_ary.uniq.include?(day_today) && day_today.eql?("Sunday")
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+                  bot.send_sticker(chat_id: msg.chat.id, sticker: sticker_id)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  bot.send_message(chat_id: msg.chat.id, text: "You've got to be kidding! It's Sunday, you shouldn't have any classes today!")
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
+                  bot.send_message(chat_id: msg.chat.id, text: "C'mon, have a break, will ya?")
+                elsif !days_ary.uniq.include?(day_today)
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                   sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
                   bot.send_sticker(chat_id: msg.chat.id, sticker: sticker_id)
 
+                  bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
                   bot.send_message(chat_id: msg.chat.id, text: "Yay! It's YOUR free day! Hang around and chill with me!")
                 end
-
-                bot.send_chat_action(chat_id: msg.chat.id, action: "typing")
-                bot.send_message(chat_id: msg.chat.id, text: "There you go, #{msg.from.first_name}!")
               end
             end
           else
@@ -424,35 +434,45 @@ module NUSBotgram
             mods.each do |key|
               mods_parsed = JSON.parse(key)
 
-              if mods_parsed[0]["day_text"].eql?(day_today) && !display_once
-                if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-                  formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+              days_ary.push(mods_parsed[0]["day_text"])
 
-                  bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+              if mods_parsed[0]["day_text"].eql?(day_today)
+                formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-                  count += 1
-                else
-                  free_schedule = true
-                end
+                bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
               end
-
-              # Identify free day in schedule
-              # if !free_schedule || count > 0
-              #   bot.send_chat_action(chat_id: message.chat.id, action: "typing")
-              #   bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
-              # elsif free_schedule && count == 0
-              #   sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
-              #   bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-              #
-              #   bot.send_message(chat_id: message.chat.id, text: "Yay! It's YOUR free day! Hang around and chill with me!")
-              # end
             end
 
-            bot.send_chat_action(chat_id: message.chat.id, action: "typing")
-            bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
-          end
+            # Identify free day in schedule
+            if days_ary.uniq.include?(day_today)
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+            elsif !days_ary.uniq.include?(day_today) && day_today.eql?("Saturday")
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              sticker_id = sticker_collections[0][:ONE_DOESNT_SIMPLY_SEND_A_TOLKIEN_STICKER]
+              bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          bot.send_message(chat_id: message.chat.id, text: "Operation not fully implemented yet")
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              bot.send_message(chat_id: message.chat.id, text: "One does not simply have classes on Saturday!")
+            elsif !days_ary.uniq.include?(day_today) && day_today.eql?("Sunday")
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+              bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              bot.send_message(chat_id: message.chat.id, text: "You've got to be kidding! It's Sunday, you shouldn't have any classes today!")
+
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              bot.send_message(chat_id: message.chat.id, text: "C'mon, have a break, will ya!")
+            elsif !days_ary.uniq.include?(day_today)
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
+              bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+              bot.send_message(chat_id: message.chat.id, text: "Yay! It's YOUR free day! Hang around and chill with me!")
+            end
+          end
         when /^\/gettodaylec$/i
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
         when /^\/gettodaytut$/i
