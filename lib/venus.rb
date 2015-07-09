@@ -35,161 +35,162 @@ module NUSBotgram
 
       case message.text
         when /greet/i
-          message.text = "Hello, #{message.from.first_name}!"
+          bot_reply = "Hello, #{message.from.first_name}!"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^hello$/
-          message.text = "Hello, #{message.from.first_name}!"
+          bot_reply = "Hello, #{message.from.first_name}!"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^hi$/
-          message.text = "Hello, #{message.from.first_name}!"
+          bot_reply = "Hello, #{message.from.first_name}!"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^hey$/
-          message.text = "Hello, #{message.from.first_name}!"
+          bot_reply = "Hello, #{message.from.first_name}!"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^how is your day$/
-          message.text = "I'm good. How about you?"
+          bot_reply = "I'm good. How about you?"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /when is your birthday/i
-          message.text = "30th June 2015"
+          bot_reply = "30th June 2015"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^what do you want to do/i
           sticker_id = sticker_collections[0][:MARK_TWAIN_HUH]
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          message.text = "You tell me, what should I do?"
+          bot_reply = "You tell me, what should I do?"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^you are awesome/i
           sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          message.text = "Thanks! I know, my creator is awesome!"
+          bot_reply = "Thanks! I know, my creator is awesome!"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /who is your creator/i
           sticker_id = sticker_collections[0][:STEVE_JOBS_LAUGHS_OUT_LOUD]
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          message.text = "He is Kenneth Ham."
+          bot_reply = "He is Kenneth Ham."
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /who built you/i
           sticker_id = sticker_collections[0][:STEVE_JOBS_LAUGHS_OUT_LOUD]
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          message.text = "He is Kenneth Ham."
+          bot_reply = "He is Kenneth Ham."
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^what time is it now/i
           now = Time.now.getlocal('+08:00').strftime("%H:%M GMT%z")
 
-          message.text = "The time now is #{now}"
+          bot_reply = "The time now is #{now}"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^what time now$/i
           now = Time.now.getlocal('+08:00').strftime("%H:%M GMT%z")
 
-          message.text = "The time now is #{now}"
+          bot_reply = "The time now is #{now}"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /bye/i
           sticker_id = sticker_collections[0][:AUDREY_IS_ON_THE_VERGE_OF_TEARS]
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          message.text = "Bye? Will I see you again?"
+          bot_reply = "Bye? Will I see you again?"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /ping$/i
           sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          message.text = "[Sigh] Do I look like a computer to you?!"
+          bot_reply = "[Sigh] Do I look like a computer to you?!"
+
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /shutdown$/i
           sticker_id = sticker_collections[0][:RICHARD_WAGNERS_TOLD_YOU]
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          message.text = "[Sigh] Tell me you didn't just try to shut me down..."
+          bot_reply = "[Sigh] Tell me you didn't just try to shut me down..."
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^\/time$/i
           now = Time.now.getlocal('+08:00').strftime("%H:%M GMT%z")
 
-          message.text = "The time now is #{now}"
+          bot_reply = "The time now is #{now}"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^\/now$/i
           now = Time.now.getlocal('+08:00').strftime("%H:%M GMT%z")
 
-          message.text = "The time now is #{now}"
+          bot_reply = "The time now is #{now}"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^\/poke$/i
           sticker_id = sticker_collections[0][:RICHARD_WAGNERS_TOLD_YOU]
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          message.text = "Aha- Don't try to be funny!"
+          bot_reply = "Aha- Don't try to be funny!"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^\/ping$/i
           sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          message.text = "[Sigh] Do I look like a computer to you?!"
+          bot_reply = "[Sigh] Do I look like a computer to you?!"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^\/crash$/i
           sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          message.text = "Why do you have to be so mean?!"
+          bot_reply = "Why do you have to be so mean?!"
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^\/shutdown$/i
           sticker_id = sticker_collections[0][:RICHARD_WAGNERS_TOLD_YOU]
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
           bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
-          message.text = "[Sigh] Tell me you didn't just try to shut me down..."
+          bot_reply = "[Sigh] Tell me you didn't just try to shut me down..."
 
           bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: message.text)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^\/help$/i
           usage = "Hello! I am #{BOT_NAME}, I am your NUS personal assistant at your service! I can guide you around NUS, get your NUSMods timetable, and lots more!\n\nYou can control me by sending these commands:
 
