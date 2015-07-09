@@ -220,7 +220,7 @@ module NUSBotgram
 
         hash_key = "users:#{telegram_id}.#{uri_code}"
 
-        if !user_code.eql?(uri_code)
+        if !user_code
           # Customized JSON hash
           # Replace JSON hash with `_key` returns the same result
           if class_no.eql?(value) && lesson_type[0, 3].upcase.eql?(module_type)
@@ -230,18 +230,22 @@ module NUSBotgram
         else
           # Customized JSON hash
           # Replace JSON hash with `_key` returns the same result
-          if class_no.eql?(value) && lesson_type[0, 3].upcase.eql?(module_type)
+          if class_no.eql?(value) && lesson_type[0, 3].upcase.eql?(module_type) ||
+              "#{lesson_type[0].upcase}LEC".eql?("DLEC") ||
+              "#{lesson_type[0].upcase}LEC".eql?("PLEC") ||
+              "#{lesson_type[0].upcase}TUT".eql?("PTUT")
+
             hkey = "users:#{telegram_id}.#{user_code}"
 
             # Check if the same NUSMods URI shortened code exists,
             # If it does, do nothing, else delete and replace with the new NUSMods URI shortened code
-            if uri_code != user_code && !is_deleted
+            if user_code != uri_code && !is_deleted
               ldelete_keys(hkey)
               @@redis.hset("users", telegram_id, uri_code)
               is_deleted = true
 
               store_json(hash_key, uri, mod_code, mod_title, class_no, week_text, day_text, start_time, end_time, venue, lecture_periods, lesson_type, tutorial_periods)
-            elsif uri_code == user_code && !is_deleted
+            elsif user_code == uri_code && !is_deleted
               ldelete_keys(hkey)
               @@redis.hset("users", telegram_id, uri_code)
               is_deleted = true
