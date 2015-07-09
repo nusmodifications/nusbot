@@ -17,7 +17,9 @@ module NUSBotgram
     # Venus Bot's reply messages
     SEND_NUSMODS_URI_MESSAGE = "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)"
     REGISTERED_NUSMODS_URI_MESSAGE = "Awesome! I have registered your NUSMods URL"
-    INVALID_NUSMODS_URI_MESSAGE = "I'm afraid this is an invalid NUSMODS URL that I do not recognize.\nI am cancelling this operation because I do not understand what to process.\nPlease try again to '/setmodurl' with a correct NUSMods URL."
+    INVALID_NUSMODS_URI_MESSAGE = "I'm afraid this is an invalid NUSMODS URL that I do not recognize."
+    INVALID_NUSMODS_URI_CANCEL_MESSAGE = "I am cancelling this operation because I do not understand what to process."
+    INVALID_NUSMODS_URI_RETRY_MESSAGE = "Please try again to '/setmodurl' with a correct NUSMods URL."
     RETRIEVE_TIMETABLE_MESSAGE = "Give me awhile, while I retrieve your timetable..."
     DISPLAY_MODULE_MESSAGE = "Alright! What module do you want me to display?"
     SEARCH_MODULES_MESSAGE = "Alright! What modules do you want to search?"
@@ -225,14 +227,31 @@ module NUSBotgram
             mod_uri = msg.text
             telegram_id = msg.from.id
 
-            status = engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+            status_code = engine.analyze_uri(mod_uri)
 
-            if status == 404 || status.eql?("404")
-              bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-              bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
-            else
+            if status_code == 200
+              engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+
               bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
               bot.send_message(chat_id: msg.chat.id, text: "#{REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+            elsif status_code == 403 || status_code == 404
+              bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_CANCEL_MESSAGE)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_RETRY_MESSAGE)
+            else
+              bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_CANCEL_MESSAGE)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_RETRY_MESSAGE)
             end
           end
         when /^\/listmods$/i
@@ -245,12 +264,11 @@ module NUSBotgram
               mod_uri = msg.text
               telegram_id = msg.from.id
 
-              status = engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+              status_code = engine.analyze_uri(mod_uri)
 
-              if status == 404 || status.eql?("404")
-                bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
-              else
+              if status_code == 200
+                engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+
                 bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
                 bot.send_message(chat_id: msg.chat.id, text: "#{REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
@@ -258,6 +276,24 @@ module NUSBotgram
                 bot.send_message(chat_id: msg.chat.id, text: RETRIEVE_TIMETABLE_MESSAGE)
 
                 model.list_mods(telegram_id, bot, engine, msg)
+              elsif status_code == 403 || status_code == 404
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_CANCEL_MESSAGE)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_RETRY_MESSAGE)
+              else
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_CANCEL_MESSAGE)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_RETRY_MESSAGE)
               end
             end
           else
@@ -279,12 +315,11 @@ module NUSBotgram
               mod_uri = msg.text
               telegram_id = msg.from.id
 
-              status = engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+              status_code = engine.analyze_uri(mod_uri)
 
-              if status == 404 || status.eql?("404")
-                bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
-              else
+              if status_code == 200
+                engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+
                 bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
                 bot.send_message(chat_id: msg.chat.id, text: "#{REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
@@ -294,6 +329,24 @@ module NUSBotgram
                 bot.update do |mod|
                   model.get_mod(telegram_id, bot, engine, mods_ary, mod, sticker_collections)
                 end
+              elsif status_code == 403 || status_code == 404
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_CANCEL_MESSAGE)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_RETRY_MESSAGE)
+              else
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_CANCEL_MESSAGE)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_RETRY_MESSAGE)
               end
             end
           else
@@ -306,7 +359,7 @@ module NUSBotgram
               model.get_mod(telegram_id, bot, engine, mods_ary, msg, sticker_collections)
             end
           end
-        when /(^\/today$|^\/today #{custom_today})/i
+        when /(^\/today$|^\/today #{custom_today})/
           custom_today = message.text.sub!("/today", "").strip
 
           if custom_today.eql?("") || custom_today == ""
@@ -323,13 +376,12 @@ module NUSBotgram
                 mod_uri = msg.text
                 telegram_id = msg.from.id
 
-                status = engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+                status_code = engine.analyze_uri(mod_uri)
 
-                if status == 404 || status.eql?("404")
-                  bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                  bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
-                else
-                  bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
+                if status_code == 200
+                  engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+
+                  bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: "#{REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
                   bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
@@ -337,6 +389,24 @@ module NUSBotgram
 
                   customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
                   model.get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
+                elsif status_code == 403 || status_code == 404
+                  bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
+
+                  bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_CANCEL_MESSAGE)
+
+                  bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_RETRY_MESSAGE)
+                else
+                  bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
+
+                  bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_CANCEL_MESSAGE)
+
+                  bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_RETRY_MESSAGE)
                 end
               end
             else

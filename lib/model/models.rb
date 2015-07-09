@@ -16,17 +16,10 @@ module NUSBotgram
       module_results.each do |key|
         mods_parsed = JSON.parse(key)
 
-        if mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("LEC") || mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("SEM")
-          formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
+        formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-          bot.send_chat_action(chat_id: message.chat.id, action: "typing")
-          bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-        elsif mods_parsed[0]["lesson_type"][0, 3].upcase.eql?("TUT")
-          formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
-
-          bot.send_chat_action(chat_id: message.chat.id, action: "typing")
-          bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-        end
+        bot.send_chat_action(chat_id: message.chat.id, action: "typing")
+        bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
       end
 
       bot.send_chat_action(chat_id: message.chat.id, action: "typing")
@@ -160,7 +153,7 @@ module NUSBotgram
         bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
         bot.send_chat_action(chat_id: message.chat.id, action: "typing")
-        bot.send_message(chat_id: message.chat.id, text: "It seems like you are either not taking or do not have any #{lesson_type.downcase}-based classes today!")
+        bot.send_message(chat_id: message.chat.id, text: "It seems like you are either not taking or do not have any \"#{lesson_type.downcase}\"-based classes today!")
       end
     end
   end
