@@ -7,12 +7,14 @@ require_relative 'model/models'
 
 module NUSBotgram
   class Venus
+    # Constant
     BOT_NAME = 'Venus'
     START_YEAR = 2015
     END_YEAR = 2016
     SEM = 1
     DAY_REGEX = /([a-zA-Z]{6,})/
 
+    # Venus Bot's reply messages
     SEND_NUSMODS_URI_MESSAGE = "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)"
     REGISTERED_NUSMODS_URI_MESSAGE = "Awesome! I have registered your NUSMods URL"
     INVALID_NUSMODS_URI_MESSAGE = "I'm afraid this is an invalid NUSMODS URL that I do not recognize.\nI am cancelling this operation because I do not understand what to process.\nPlease try again to '/setmodurl' with a correct NUSMods URL."
@@ -21,14 +23,19 @@ module NUSBotgram
     SEARCH_MODULES_MESSAGE = "Alright! What modules do you want to search?"
     GET_TIMETABLE_TODAY_MESSAGE = "Alright! Let's get you your schedule for today!"
 
+    # Action types
     TYPING_ACTION = "typing"
     UNRECOGNIZED_COMMAND_RESPONSE = "Unrecognized command. Say what?"
 
+    # Configuration & setup
     config = YAML.load_file("config/config.yml")
     sticker_collections = YAML.load_file("config/stickers.yml")
     bot = NUSBotgram::Bot.new(config[0][:T_BOT_APIKEY_DEV])
     engine = NUSBotgram::Core.new
     model = NUSBotgram::Models.new
+
+    # Custom Regex Queries for dynamic command
+    custom_today = ""
 
     bot.get_updates do |message|
       puts "In chat #{message.chat.id}, @#{message.from.first_name} > @#{message.from.id} said: #{message.text}"
@@ -299,80 +306,84 @@ module NUSBotgram
               model.get_mod(telegram_id, bot, engine, mods_ary, msg, sticker_collections)
             end
           end
-        when /^\/today$/i
-          day_of_week_regex = /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/
-          day_today = Time.now.strftime("%A")
-          days_ary = Array.new
+        when /(^\/today$|^\/today #{custom_today})/i
+          custom_today = message.text.sub!("/today", "").strip
 
-          if !engine.db_exist(message.from.id)
-            force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
-            bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-            bot.send_message(chat_id: message.chat.id, text: SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
+          if custom_today.eql?("") || custom_today == ""
+            day_of_week_regex = /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/
+            day_today = Time.now.strftime("%A")
+            days_ary = Array.new
 
-            bot.update do |msg|
-              mod_uri = msg.text
-              telegram_id = msg.from.id
+            if !engine.db_exist(message.from.id)
+              force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+              bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
 
-              status = engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+              bot.update do |msg|
+                mod_uri = msg.text
+                telegram_id = msg.from.id
 
-              if status == 404 || status.eql?("404")
-                bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
-              else
-                bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                bot.send_message(chat_id: msg.chat.id, text: "#{REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+                status = engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
 
-                bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                bot.send_message(chat_id: msg.chat.id, text: GET_TIMETABLE_TODAY_MESSAGE)
+                if status == 404 || status.eql?("404")
+                  bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
+                else
+                  bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: "#{REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
-                customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
-                model.get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
+                  bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: GET_TIMETABLE_TODAY_MESSAGE)
+
+                  customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
+                  model.get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
+                end
               end
+            else
+              telegram_id = message.from.id
+              bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: GET_TIMETABLE_TODAY_MESSAGE)
+
+              customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
+              model.get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
             end
-          else
-            telegram_id = message.from.id
-            bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-            bot.send_message(chat_id: message.chat.id, text: GET_TIMETABLE_TODAY_MESSAGE)
+          elsif custom_today.downcase.eql?("lec") || custom_today.downcase.eql?("lecture")
+            day_today = Time.now.strftime("%A")
+            days_ary = Array.new
+            mods_ary = Array.new
+            lesson_type = "Lecture"
 
-            customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
-            model.get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
-          end
-        when /^\/todaylec$/i
-          day_today = Time.now.strftime("%A")
-          days_ary = Array.new
-          mods_ary = Array.new
-          lesson_type = "Lecture"
+            if !engine.db_exist(message.from.id)
+              force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+              bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
 
-          if !engine.db_exist(message.from.id)
-            force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
-            bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-            bot.send_message(chat_id: message.chat.id, text: SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
+              bot.update do |msg|
+                mod_uri = msg.text
+                telegram_id = msg.from.id
 
-            bot.update do |msg|
-              mod_uri = msg.text
-              telegram_id = msg.from.id
+                status = engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
 
-              status = engine.set_mod(mod_uri, START_YEAR, END_YEAR, SEM, telegram_id)
+                if status == 404 || status.eql?("404")
+                  bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
+                else
+                  bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: "#{REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
-              if status == 404 || status.eql?("404")
-                bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                bot.send_message(chat_id: msg.chat.id, text: INVALID_NUSMODS_URI_MESSAGE)
-              else
-                bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                bot.send_message(chat_id: msg.chat.id, text: "#{REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+                  bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: GET_TIMETABLE_TODAY_MESSAGE)
 
-                bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                bot.send_message(chat_id: msg.chat.id, text: GET_TIMETABLE_TODAY_MESSAGE)
-
-                model.get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, days_ary, mods_ary, msg, sticker_collections)
+                  model.get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, days_ary, mods_ary, msg, sticker_collections)
+                end
               end
-            end
-          else
-            telegram_id = message.from.id
-            bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
-            bot.send_message(chat_id: message.chat.id, text: GET_TIMETABLE_TODAY_MESSAGE)
+            else
+              telegram_id = message.from.id
+              bot.send_chat_action(chat_id: message.chat.id, action: TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: GET_TIMETABLE_TODAY_MESSAGE)
 
-            model.get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, days_ary, mods_ary, message, sticker_collections)
+              model.get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, days_ary, mods_ary, message, sticker_collections)
+            end
           end
         when /^\/gettodaytut$/i
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
