@@ -115,8 +115,10 @@ module NUSBotgram
 
     public
 
-    def get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, days_ary, mods_ary, message, sticker_collections)
+    def get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, message, sticker_collections)
       module_results = engine.get_mod(telegram_id)
+      days_ary = Array.new
+      mods_ary = Array.new
 
       module_results.each do |key|
         mods_parsed = JSON.parse(key)
@@ -124,7 +126,7 @@ module NUSBotgram
         days_ary.push(mods_parsed[0]["day_text"])
         mods_ary.push(mods_parsed[0]["lesson_type"])
 
-        if mods_parsed[0]["day_text"].eql?(day_today) && mods_parsed[0]["lesson_type"].eql?("#{lesson_type}")
+        if mods_parsed[0]["day_text"].eql?(day_today) && mods_parsed[0]["lesson_type"].downcase.eql?("#{lesson_type.downcase}")
           formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
           bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
@@ -163,11 +165,8 @@ module NUSBotgram
 
     public
 
-    def today_star_command(bot, engine, message, lesson_entity, sticker_collections)
+    def today_star_command(bot, engine, message, lesson_type, sticker_collections)
       day_today = Time.now.strftime("%A")
-      days_ary = Array.new
-      mods_ary = Array.new
-      lesson_type = lesson_entity
 
       if !engine.db_exist(message.from.id)
         force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
@@ -189,7 +188,7 @@ module NUSBotgram
             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
             bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-            get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, days_ary, mods_ary, msg, sticker_collections)
+            get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, msg, sticker_collections)
           elsif status_code == 403 || status_code == 404
             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
             bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
@@ -215,7 +214,7 @@ module NUSBotgram
         bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
         bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-        get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, days_ary, mods_ary, message, sticker_collections)
+        get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, message, sticker_collections)
       end
     end
   end
