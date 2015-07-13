@@ -180,20 +180,7 @@ module NUSBotgram
           bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
           bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^\/help$/i
-          usage = "Hello! I am #{Global::BOT_NAME}, I am your NUS personal assistant at your service! I can guide you around NUS, get your NUSMods timetable, and lots more!\n\nYou can control me by sending these commands:
-
-                  /help - displays the usage commands
-                  /setmodurl - sets your nusmods url
-                  /listmods - find your modules
-                  /getmod - retrieves a particular module
-                  /today - retrieves today's timetable
-                  /gettodaylec - retrieves today's lectures
-                  /gettodaytut - retrieves today's tutorials
-                  /gettodaylab - retrieves today's laboratory sessions
-                  /gettodaysem - retrieves today's seminars
-                  /nextclass - retrieves your next class
-                  /setprivacy - protects your privacy
-                  /cancel - cancel the current operation"
+          usage = "Hello! I am #{Global::BOT_NAME}, I am your NUS personal assistant at your service! I can guide you around NUS, get your NUSMods timetable, and lots more!\n\nYou can control me by sending these commands:\n\n/setmodurl - sets your nusmods url\n/listmods - find your modules\n/getmod - retrieves a particular module\n/today - retrieves today's timetable\n/nextclass - retrieves your next class\n/setprivacy - protects your privacy\n/cancel - cancel the current operation"
 
           bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
           bot.send_message(chat_id: message.chat.id, text: "#{usage}")
@@ -421,12 +408,6 @@ module NUSBotgram
           end
 
           custom_today.clear
-        when /^\/gettodaytut$/i
-          bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
-        when /^\/gettodaylab$/i
-          bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
-        when /^\/gettodaysem$/i
-          bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
         when /^\/nextclass$/i
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
         when /^\/setprivacy$/i
