@@ -12,7 +12,7 @@ module NUSBotgram
     LABORATORY = 'Laboratory'
     LECTURE = 'Lecture'
     PACKAGED_LECTURE = 'Packaged Lecture'
-    PACKAGE_TUTORIAL = 'Packaged Tutorial'
+    PACKAGED_TUTORIAL = 'Packaged Tutorial'
     RECITATION = 'Recitation'
     SECTIONAL_TEACHING = 'Sectional Teaching'
     SEMINAR_STYLE_MODULE_CLASS = 'Seminar-Style Module Class'

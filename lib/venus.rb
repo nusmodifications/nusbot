@@ -404,6 +404,8 @@ module NUSBotgram
             model.today_star_command(bot, engine, message, Global::LECTURE, sticker_collections)
           elsif custom_today.downcase.eql?("plec") || custom_today.downcase.eql?("plecture")
             model.today_star_command(bot, engine, message, Global::PACKAGED_LECTURE, sticker_collections)
+          elsif custom_today.downcase.eql?("ptut") || custom_today.downcase.eql?("ptutorial")
+            model.today_star_command(bot, engine, message, Global::PACKAGED_TUTORIAL, sticker_collections)
           elsif custom_today.downcase.eql?("rec") || custom_today.downcase.eql?("recitation")
             model.today_star_command(bot, engine, message, Global::RECITATION, sticker_collections)
           elsif custom_today.downcase.eql?("sec") || custom_today.downcase.eql?("sectional")
@@ -417,6 +419,8 @@ module NUSBotgram
           elsif custom_today.downcase.eql?("tut3") || custom_today.downcase.eql?("tutorial3")
             model.today_star_command(bot, engine, message, Global::TUTORIAL_TYPE_3, sticker_collections)
           end
+
+          custom_today.clear
         when /^\/gettodaytut$/i
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
         when /^\/gettodaylab$/i

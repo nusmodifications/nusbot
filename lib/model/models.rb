@@ -119,10 +119,12 @@ module NUSBotgram
       module_results = engine.get_mod(telegram_id)
       days_ary = Array.new
       mods_ary = Array.new
+      daymods_hash = Hash.new
 
       module_results.each do |key|
         mods_parsed = JSON.parse(key)
 
+        daymods_hash[mods_parsed[0]["day_text"]] = mods_parsed[0]["lesson_type"]
         days_ary.push(mods_parsed[0]["day_text"])
         mods_ary.push(mods_parsed[0]["lesson_type"])
 
@@ -133,7 +135,7 @@ module NUSBotgram
         end
       end
 
-      if days_ary.uniq.include?(day_today) && mods_ary.uniq.include?("#{lesson_type}")
+      if days_ary.uniq.include?(day_today) && daymods_hash[day_today].include?("#{lesson_type}") #mods_ary.uniq.include?("#{lesson_type}")
         bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
         bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
       elsif !days_ary.uniq.include?(day_today) && day_today.eql?("Saturday")
@@ -153,7 +155,14 @@ module NUSBotgram
 
         bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
         bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE_END)
-      elsif !days_ary.uniq.include?(day_today) || !mods_ary.uniq.include?("#{lesson_type}")
+      elsif !days_ary.uniq.include?(day_today) || !daymods_hash[day_today].include?("#{lesson_type}") #mods_ary.uniq.include?("#{lesson_type}")
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
+        bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_message(chat_id: message.chat.id, text: "It seems like you are either not taking or do not have any \"#{lesson_type.downcase}\"-based classes today!")
+      elsif !days_ary.uniq.include?(day_today) || !daymods_hash[day_today].include?("#{lesson_type}") #mods_ary.uniq.include?("#{lesson_type}")
         bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
         sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
         bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
