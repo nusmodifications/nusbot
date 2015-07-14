@@ -66,7 +66,7 @@ module NUSBotgram
 
     public
 
-    def get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
+    def get_today(telegram_id, bot, engine, day_today, days_ary, message, sticker_collections)
       module_results = engine.get_mod(telegram_id)
 
       module_results.each do |key|
@@ -113,7 +113,7 @@ module NUSBotgram
         bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
 
         bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        bot.send_message(chat_id: message.chat.id, text: customized_message, reply_markup: close_keyboard)
+        bot.send_message(chat_id: message.chat.id, text: Global::FREEDAY_RESPONSE, reply_markup: close_keyboard)
       end
     end
 

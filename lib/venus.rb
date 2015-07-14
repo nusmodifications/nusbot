@@ -357,8 +357,7 @@ module NUSBotgram
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                     bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-                    customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
-                    models.get_today(telegram_id, bot, engine, day_today, days_ary, msg, customized_message, sticker_collections)
+                    models.get_today(telegram_id, bot, engine, day_today, days_ary, msg, sticker_collections)
                   elsif status_code == 403 || status_code == 404
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                     bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
@@ -384,8 +383,7 @@ module NUSBotgram
                 bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: response.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-                customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
-                models.get_today(telegram_id, bot, engine, day_today, days_ary, response, customized_message, sticker_collections)
+                models.get_today(telegram_id, bot, engine, day_today, days_ary, response, sticker_collections)
               end
             elsif user_reply.downcase.eql?("dlec")
               models.today_star_command(bot, engine, response, Global::DESIGN_LECTURE, sticker_collections)
@@ -435,31 +433,30 @@ module NUSBotgram
                 if status_code == 200
                   engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-                  bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
                   bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-                  customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
-                  models.get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
+                  models.get_today(telegram_id, bot, engine, day_today, days_ary, msg, sticker_collections)
                 elsif status_code == 403 || status_code == 404
-                  bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
 
-                  bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
 
-                  bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
                 else
-                  bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
 
-                  bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
 
-                  bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
                 end
               end
@@ -468,8 +465,7 @@ module NUSBotgram
               bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
               bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-              customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
-              models.get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
+              models.get_today(telegram_id, bot, engine, day_today, days_ary, message, sticker_collections)
             end
           elsif custom_today.downcase.eql?("dlec") || custom_today.downcase.eql?("dlecture")
             models.today_star_command(bot, engine, message, Global::DESIGN_LECTURE, sticker_collections)

@@ -35,6 +35,7 @@ module NUSBotgram
     NSATURDAY_RESPONSE = "One does not simply have classes on Saturday!"
     NSUNDAY_RESPONSE = "You've got to be kidding! It's Sunday, you shouldn't have any classes today!"
     NSUNDAY_RESPONSE_END = "C'mon, have a break, will ya!"
+    FREEDAY_RESPONSE = "Yay! It's YOUR free day! Hang around and chill with me!"
 
     # Action types
     TYPING_ACTION = "typing"
