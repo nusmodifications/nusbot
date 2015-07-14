@@ -409,6 +409,105 @@ module NUSBotgram
 
           custom_today.clear
         when /^\/nextclass$/i
+          current_time_now = Time.now.strftime("%R")
+          day_today = Time.now.strftime("%A")
+          mods_hash = Hash.new
+          unsorted_hash = Hash.new
+          sorted_hash = Hash.new
+          time_ary = Array.new
+          i = 0
+
+          if !engine.db_exist(message.from.id)
+            force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
+
+            bot.update do |msg|
+              mod_uri = msg.text
+              telegram_id = msg.from.id
+
+              status_code = engine.analyze_uri(mod_uri)
+
+              if status_code == 200
+                engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE)
+
+                model.list_mods(telegram_id, bot, engine, msg)
+              elsif status_code == 403 || status_code == 404
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+              else
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+              end
+            end
+          else
+            telegram_id = message.from.id
+            module_results = engine.get_mod(telegram_id)
+            skip = false
+            stop = false
+
+            # Preprocess
+            module_results.each do |key|
+              mods_parsed = JSON.parse(key)
+
+              if mods_parsed[0]["day_text"].eql?(day_today)
+                unsorted_hash[i] = mods_parsed
+                mods_hash["#{mods_parsed[0]["day_text"]}-#{i}"] = mods_parsed[0]["start_time"]
+                time_ary.push(mods_parsed[0]["start_time"])
+
+                i += 1
+              end
+            end
+
+            # Sort array in ascending order - Time relative
+            sorted = engine.bubble_sort(time_ary)
+
+            # Process and store the sorted time into Hash
+            for j in 0...mods_hash.size do
+              # if current_time_now < sorted[j]
+                for k in 0...mods_hash.size do
+                  if mods_hash["#{day_today}-#{j}"].include?(sorted[k])
+                    sorted_hash[j] = unsorted_hash[k]
+                  end
+                end
+              # end
+            end
+
+            sorted_hash.each do |key, value|
+              lesson_time = sorted_hash[key][0]["start_time"]
+
+              if sorted_hash[key][0]["day_text"].eql?(day_today) && current_time_now < lesson_time && !skip && !stop
+                skip = true
+                stop = false
+              elsif sorted_hash[key][0]["day_text"].eql?(day_today) && current_time_now < lesson_time && skip && !stop
+                formatted = "#{sorted_hash[key][0]["module_code"]} - #{sorted_hash[key][0]["module_title"]}\n#{sorted_hash[key][0]["lesson_type"][0, 3].upcase}[#{sorted_hash[key][0]["class_no"]}]: #{sorted_hash[key][0]["day_text"]}\n#{sorted_hash[key][0]["start_time"]} - #{sorted_hash[key][0]["end_time"]} @ #{sorted_hash[key][0]["venue"]}"
+
+                bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+
+                stop = true
+              end
+            end
+          end
+
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
         when /^\/setprivacy$/i
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
