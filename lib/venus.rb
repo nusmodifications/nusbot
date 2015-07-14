@@ -13,7 +13,7 @@ module NUSBotgram
     sticker_collections = YAML.load_file("config/stickers.yml")
     bot = NUSBotgram::Bot.new(config[0][:T_BOT_APIKEY_DEV])
     engine = NUSBotgram::Core.new
-    model = NUSBotgram::Models.new
+    models = NUSBotgram::Models.new
 
     # Custom Regex Queries for dynamic command
     custom_today = ""
@@ -241,7 +241,7 @@ module NUSBotgram
                 bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE)
 
-                model.list_mods(telegram_id, bot, engine, msg)
+                models.list_mods(telegram_id, bot, engine, msg)
               elsif status_code == 403 || status_code == 404
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
@@ -267,7 +267,7 @@ module NUSBotgram
             bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
             bot.send_message(chat_id: message.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE)
 
-            model.list_mods(telegram_id, bot, engine, message)
+            models.list_mods(telegram_id, bot, engine, message)
           end
         when /^\/getmod$/i
           mods_ary = Array.new
@@ -293,7 +293,7 @@ module NUSBotgram
                 bot.send_message(chat_id: msg.chat.id, text: Global::DISPLAY_MODULE_MESSAGE, reply_markup: force_reply)
 
                 bot.update do |mod|
-                  model.get_mod(telegram_id, bot, engine, mods_ary, mod, sticker_collections)
+                  models.get_mod(telegram_id, bot, engine, mods_ary, mod, sticker_collections)
                 end
               elsif status_code == 403 || status_code == 404
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
@@ -322,7 +322,7 @@ module NUSBotgram
             bot.send_message(chat_id: message.chat.id, text: Global::SEARCH_MODULES_MESSAGE, reply_markup: force_reply)
 
             bot.update do |msg|
-              model.get_mod(telegram_id, bot, engine, mods_ary, msg, sticker_collections)
+              models.get_mod(telegram_id, bot, engine, mods_ary, msg, sticker_collections)
             end
           end
         when /(^\/today$|^\/today #{custom_today})/
@@ -354,7 +354,7 @@ module NUSBotgram
                   bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
                   customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
-                  model.get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
+                  models.get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
                 elsif status_code == 403 || status_code == 404
                   bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
@@ -381,41 +381,36 @@ module NUSBotgram
               bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
               customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
-              model.get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
+              models.get_today(telegram_id, bot, engine, day_today, days_ary, message, customized_message, sticker_collections)
             end
           elsif custom_today.downcase.eql?("dlec") || custom_today.downcase.eql?("dlecture")
-            model.today_star_command(bot, engine, message, Global::DESIGN_LECTURE, sticker_collections)
+            models.today_star_command(bot, engine, message, Global::DESIGN_LECTURE, sticker_collections)
           elsif custom_today.downcase.eql?("lab") || custom_today.downcase.eql?("laboratory")
-            model.today_star_command(bot, engine, message, Global::LABORATORY, sticker_collections)
+            models.today_star_command(bot, engine, message, Global::LABORATORY, sticker_collections)
           elsif custom_today.downcase.eql?("lec") || custom_today.downcase.eql?("lecture")
-            model.today_star_command(bot, engine, message, Global::LECTURE, sticker_collections)
+            models.today_star_command(bot, engine, message, Global::LECTURE, sticker_collections)
           elsif custom_today.downcase.eql?("plec") || custom_today.downcase.eql?("plecture")
-            model.today_star_command(bot, engine, message, Global::PACKAGED_LECTURE, sticker_collections)
+            models.today_star_command(bot, engine, message, Global::PACKAGED_LECTURE, sticker_collections)
           elsif custom_today.downcase.eql?("ptut") || custom_today.downcase.eql?("ptutorial")
-            model.today_star_command(bot, engine, message, Global::PACKAGED_TUTORIAL, sticker_collections)
+            models.today_star_command(bot, engine, message, Global::PACKAGED_TUTORIAL, sticker_collections)
           elsif custom_today.downcase.eql?("rec") || custom_today.downcase.eql?("recitation")
-            model.today_star_command(bot, engine, message, Global::RECITATION, sticker_collections)
+            models.today_star_command(bot, engine, message, Global::RECITATION, sticker_collections)
           elsif custom_today.downcase.eql?("sec") || custom_today.downcase.eql?("sectional")
-            model.today_star_command(bot, engine, message, Global::SECTIONAL_TEACHING, sticker_collections)
+            models.today_star_command(bot, engine, message, Global::SECTIONAL_TEACHING, sticker_collections)
           elsif custom_today.downcase.eql?("sem") || custom_today.downcase.eql?("seminar")
-            model.today_star_command(bot, engine, message, Global::SEMINAR_STYLE_MODULE_CLASS, sticker_collections)
+            models.today_star_command(bot, engine, message, Global::SEMINAR_STYLE_MODULE_CLASS, sticker_collections)
           elsif custom_today.downcase.eql?("tut") || custom_today.downcase.eql?("tutorial")
-            model.today_star_command(bot, engine, message, Global::TUTORIAL, sticker_collections)
+            models.today_star_command(bot, engine, message, Global::TUTORIAL, sticker_collections)
           elsif custom_today.downcase.eql?("tut2") || custom_today.downcase.eql?("tutorial2")
-            model.today_star_command(bot, engine, message, Global::TUTORIAL_TYPE_2, sticker_collections)
+            models.today_star_command(bot, engine, message, Global::TUTORIAL_TYPE_2, sticker_collections)
           elsif custom_today.downcase.eql?("tut3") || custom_today.downcase.eql?("tutorial3")
-            model.today_star_command(bot, engine, message, Global::TUTORIAL_TYPE_3, sticker_collections)
+            models.today_star_command(bot, engine, message, Global::TUTORIAL_TYPE_3, sticker_collections)
           end
 
           custom_today.clear
         when /^\/nextclass$/i
           current_time_now = Time.now.strftime("%R")
           day_today = Time.now.strftime("%A")
-          mods_hash = Hash.new
-          unsorted_hash = Hash.new
-          sorted_hash = Hash.new
-          time_ary = Array.new
-          i = 0
 
           if !engine.db_exist(message.from.id)
             force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
@@ -435,9 +430,9 @@ module NUSBotgram
                 bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
                 bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE)
+                bot.send_message(chat_id: msg.chat.id, text: Global::NEXT_CLASS_MESSAGE)
 
-                model.list_mods(telegram_id, bot, engine, msg)
+                models.predict_next_class(telegram_id, bot, engine, current_time_now, day_today, msg, sticker_collections)
               elsif status_code == 403 || status_code == 404
                 bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
@@ -460,48 +455,11 @@ module NUSBotgram
             end
           else
             telegram_id = message.from.id
-            module_results = engine.get_mod(telegram_id)
-            stop = false
 
-            # Preprocess
-            module_results.each do |key|
-              mods_parsed = JSON.parse(key)
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::NEXT_CLASS_MESSAGE)
 
-              if mods_parsed[0]["day_text"].eql?(day_today)
-                unsorted_hash[i] = mods_parsed
-                mods_hash["#{mods_parsed[0]["day_text"]}-#{i}"] = mods_parsed[0]["start_time"]
-                time_ary.push(mods_parsed[0]["start_time"])
-
-                i += 1
-              end
-            end
-
-            # Sort array in ascending order - Time relative
-            sorted = engine.bubble_sort(time_ary)
-
-            # Process and store the sorted time into Hash
-            for j in 0...mods_hash.size do
-              # if current_time_now < sorted[j]
-              for k in 0...mods_hash.size do
-                if mods_hash["#{day_today}-#{j}"].include?(sorted[k])
-                  sorted_hash[j] = unsorted_hash[k]
-                end
-              end
-              # end
-            end
-
-            sorted_hash.each do |key, value|
-              lesson_time = sorted_hash[key][0]["start_time"]
-
-              if sorted_hash[key][0]["day_text"].eql?(day_today) && current_time_now <= lesson_time && !stop
-                formatted = "#{sorted_hash[key][0]["module_code"]} - #{sorted_hash[key][0]["module_title"]}\n#{sorted_hash[key][0]["lesson_type"][0, 3].upcase}[#{sorted_hash[key][0]["class_no"]}]: #{sorted_hash[key][0]["day_text"]}\n#{sorted_hash[key][0]["start_time"]} - #{sorted_hash[key][0]["end_time"]} @ #{sorted_hash[key][0]["venue"]}"
-
-                bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-                bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-
-                stop = true
-              end
-            end
+            models.predict_next_class(telegram_id, bot, engine, current_time_now, day_today, message, sticker_collections)
           end
         when /^\/setprivacy$/i
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")

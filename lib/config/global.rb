@@ -27,6 +27,8 @@ module NUSBotgram
     NUSMODS_URI_CANCEL_MESSAGE = "I am cancelling this operation because I do not understand what to process."
     NUSMODS_URI_RETRY_MESSAGE = "Please try again to '/setmodurl' with a correct NUSMods URL."
     RETRIEVE_TIMETABLE_MESSAGE = "Give me awhile, while I retrieve your timetable..."
+    NEXT_CLASS_MESSAGE = "Your next class schedule is..."
+    NEXT_CLASS_NULL_MESSAGE = "That's awesome! Well, I guess that's the end of the day for you today!"
     DISPLAY_MODULE_MESSAGE = "Alright! What module do you want me to display?"
     SEARCH_MODULES_MESSAGE = "Alright! What modules do you want to search?"
     GET_TIMETABLE_TODAY_MESSAGE = "Alright! Let's get you your schedule for today!"

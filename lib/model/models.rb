@@ -117,9 +117,10 @@ module NUSBotgram
 
     def get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, message, sticker_collections)
       module_results = engine.get_mod(telegram_id)
+
+      daymods_hash = Hash.new
       days_ary = Array.new
       mods_ary = Array.new
-      daymods_hash = Hash.new
 
       module_results.each do |key|
         mods_parsed = JSON.parse(key)
@@ -224,6 +225,67 @@ module NUSBotgram
         bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
         get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, message, sticker_collections)
+      end
+    end
+
+    public
+
+    def predict_next_class(telegram_id, bot, engine, current_time_now, day_today, message, sticker_collections)
+      module_results = engine.get_mod(telegram_id)
+
+      mods_hash = Hash.new
+      unsorted_hash = Hash.new
+      sorted_hash = Hash.new
+      time_ary = Array.new
+      stop = false
+      i = 0
+
+      # Preprocess start_time to be sorted
+      module_results.each do |key|
+        mods_parsed = JSON.parse(key)
+
+        if mods_parsed[0]["day_text"].eql?(day_today)
+          unsorted_hash[i] = mods_parsed
+          mods_hash["#{mods_parsed[0]["day_text"]}-#{i}"] = mods_parsed[0]["start_time"]
+          time_ary.push(mods_parsed[0]["start_time"])
+
+          i += 1
+        end
+      end
+
+      # Sort array in ascending order - Time relative
+      sorted = engine.bubble_sort(time_ary)
+
+      # Process and store the sorted time into Hash
+      for j in 0...mods_hash.size do
+        # if current_time_now < sorted[j]
+        for k in 0...mods_hash.size do
+          if mods_hash["#{day_today}-#{j}"].include?(sorted[k])
+            sorted_hash[j] = unsorted_hash[k]
+          end
+        end
+        # end
+      end
+
+      sorted_hash.each do |key, value|
+        lesson_time = sorted_hash[key][0]["start_time"]
+
+        if sorted_hash[key][0]["day_text"].eql?(day_today) && current_time_now <= lesson_time && !stop
+          formatted = "#{sorted_hash[key][0]["module_code"]} - #{sorted_hash[key][0]["module_title"]}\n#{sorted_hash[key][0]["lesson_type"][0, 3].upcase}[#{sorted_hash[key][0]["class_no"]}]: #{sorted_hash[key][0]["day_text"]}\n#{sorted_hash[key][0]["start_time"]} - #{sorted_hash[key][0]["end_time"]} @ #{sorted_hash[key][0]["venue"]}"
+
+          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+          bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+
+          stop = true
+        elsif !stop
+          sticker_id = sticker_collections[0][:LOL_MARLEY]
+          bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+          bot.send_message(chat_id: message.chat.id, text: Global::NEXT_CLASS_NULL_MESSAGE)
+
+          stop = true
+        end
       end
     end
   end
