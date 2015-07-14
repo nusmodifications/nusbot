@@ -461,7 +461,6 @@ module NUSBotgram
           else
             telegram_id = message.from.id
             module_results = engine.get_mod(telegram_id)
-            skip = false
             stop = false
 
             # Preprocess
@@ -483,21 +482,18 @@ module NUSBotgram
             # Process and store the sorted time into Hash
             for j in 0...mods_hash.size do
               # if current_time_now < sorted[j]
-                for k in 0...mods_hash.size do
-                  if mods_hash["#{day_today}-#{j}"].include?(sorted[k])
-                    sorted_hash[j] = unsorted_hash[k]
-                  end
+              for k in 0...mods_hash.size do
+                if mods_hash["#{day_today}-#{j}"].include?(sorted[k])
+                  sorted_hash[j] = unsorted_hash[k]
                 end
+              end
               # end
             end
 
             sorted_hash.each do |key, value|
               lesson_time = sorted_hash[key][0]["start_time"]
 
-              if sorted_hash[key][0]["day_text"].eql?(day_today) && current_time_now < lesson_time && !skip && !stop
-                skip = true
-                stop = false
-              elsif sorted_hash[key][0]["day_text"].eql?(day_today) && current_time_now < lesson_time && skip && !stop
+              if sorted_hash[key][0]["day_text"].eql?(day_today) && current_time_now <= lesson_time && !stop
                 formatted = "#{sorted_hash[key][0]["module_code"]} - #{sorted_hash[key][0]["module_title"]}\n#{sorted_hash[key][0]["lesson_type"][0, 3].upcase}[#{sorted_hash[key][0]["class_no"]}]: #{sorted_hash[key][0]["day_text"]}\n#{sorted_hash[key][0]["start_time"]} - #{sorted_hash[key][0]["end_time"]} @ #{sorted_hash[key][0]["venue"]}"
 
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
@@ -507,8 +503,6 @@ module NUSBotgram
               end
             end
           end
-
-          bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
         when /^\/setprivacy$/i
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
         when /^\/cancel$/i
