@@ -39,5 +39,6 @@ module NUSBotgram
     # Action types
     TYPING_ACTION = "typing"
     UNRECOGNIZED_COMMAND_RESPONSE = "Unrecognized command. Say what?"
+    CUSTOM_TODAY_KEYBOARD = [%w(Today), %w(DLEC), %w(LAB), %w(LEC), %w(PLEC), %w(PTUT), %w(REC), %w(SEC), %w(SEM), %w(TUT), %w(TUT2), %w(TUT3)]
   end
 end

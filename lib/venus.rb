@@ -325,6 +325,94 @@ module NUSBotgram
               models.get_mod(telegram_id, bot, engine, mods_ary, msg, sticker_collections)
             end
           end
+        when /^\/todayme$/
+          question = 'What action do you want to search for today?'
+          selection = NUSBotgram::DataTypes::ReplyKeyboardMarkup.new(keyboard: Global::CUSTOM_TODAY_KEYBOARD, one_time_keyboard: true)
+          bot.send_message(chat_id: message.chat.id, text: question, reply_markup: selection)
+
+          bot.update do |response|
+            user_reply = response.text
+
+            if user_reply.downcase.eql?("today")
+              day_today = Time.now.strftime("%A")
+              days_ary = Array.new
+
+              if !engine.db_exist(response.from.id)
+                force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+                bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: response.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
+
+                bot.update do |msg|
+                  mod_uri = msg.text
+                  telegram_id = msg.from.id
+
+                  status_code = engine.analyze_uri(mod_uri)
+
+                  if status_code == 200
+                    engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
+
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
+
+                    customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
+                    models.get_today(telegram_id, bot, engine, day_today, days_ary, msg, customized_message, sticker_collections)
+                  elsif status_code == 403 || status_code == 404
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                  else
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                  end
+                end
+              else
+                telegram_id = response.from.id
+                bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: response.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
+
+                customized_message = "Yay! It's YOUR free day! Hang around and chill with me!"
+                models.get_today(telegram_id, bot, engine, day_today, days_ary, response, customized_message, sticker_collections)
+              end
+            elsif user_reply.downcase.eql?("dlec")
+              models.today_star_command(bot, engine, response, Global::DESIGN_LECTURE, sticker_collections)
+            elsif user_reply.downcase.eql?("lab")
+              models.today_star_command(bot, engine, response, Global::LABORATORY, sticker_collections)
+            elsif user_reply.downcase.eql?("lec")
+              models.today_star_command(bot, engine, response, Global::LECTURE, sticker_collections)
+            elsif user_reply.downcase.eql?("plec")
+              models.today_star_command(bot, engine, response, Global::PACKAGED_LECTURE, sticker_collections)
+            elsif user_reply.downcase.eql?("ptut")
+              models.today_star_command(bot, engine, response, Global::PACKAGED_TUTORIAL, sticker_collections)
+            elsif user_reply.downcase.eql?("rec")
+              models.today_star_command(bot, engine, response, Global::RECITATION, sticker_collections)
+            elsif user_reply.downcase.eql?("sec")
+              models.today_star_command(bot, engine, response, Global::SECTIONAL_TEACHING, sticker_collections)
+            elsif user_reply.downcase.eql?("sem")
+              models.today_star_command(bot, engine, response, Global::SEMINAR_STYLE_MODULE_CLASS, sticker_collections)
+            elsif user_reply.downcase.eql?("tut")
+              models.today_star_command(bot, engine, response, Global::TUTORIAL, sticker_collections)
+            elsif user_reply.downcase.eql?("tut2")
+              models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_2, sticker_collections)
+            elsif user_reply.downcase.eql?("tut3")
+              models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_3, sticker_collections)
+            end
+
+            user_reply.clear
+          end
         when /(^\/today$|^\/today #{custom_today})/
           custom_today = message.text.sub!("/today", "").strip
 
@@ -469,6 +557,7 @@ module NUSBotgram
           question = 'This is an awesome message?'
           answers = NUSBotgram::DataTypes::ReplyKeyboardMarkup.new(keyboard: [%w(YES), %w(NO)], one_time_keyboard: true)
           bot.send_message(chat_id: message.chat.id, text: question, reply_markup: answers)
+          puts message.text
         when /^\/stop$/i
           kb = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
           bot.send_message(chat_id: message.chat.id, text: 'Thank you for your honesty!', reply_markup: kb)
