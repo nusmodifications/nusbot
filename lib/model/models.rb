@@ -1,4 +1,5 @@
 require_relative '../config/global'
+require_relative '../common/algorithms'
 
 module NUSBotgram
   class Models
@@ -241,6 +242,7 @@ module NUSBotgram
     public
 
     def predict_next_class(telegram_id, bot, engine, current_time_now, day_today, message, sticker_collections)
+      algorithms = NUSBotgram::Algorithms.new
       module_results = engine.get_mod(telegram_id)
 
       mods_hash = Hash.new
@@ -264,7 +266,7 @@ module NUSBotgram
       end
 
       # Sort array in ascending order - Time relative
-      sorted = engine.bubble_sort(time_ary)
+      sorted = algorithms.bubble_sort(time_ary)
 
       # Process and store the sorted time into Hash
       for j in 0...mods_hash.size do
