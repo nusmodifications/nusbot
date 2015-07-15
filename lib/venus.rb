@@ -180,7 +180,7 @@ module NUSBotgram
           bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
           bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^\/help$/i
-          usage = "Hello! I am #{Global::BOT_NAME}, I am your NUS personal assistant at your service! I can guide you around NUS, get your NUSMods timetable, and lots more!\n\nYou can control me by sending these commands:\n\n/setmodurl - sets your nusmods url\n/listmods - find your modules\n/getmod - retrieves a particular module\n/today - retrieves today's timetable\n/nextclass - retrieves your next class\n/setprivacy - protects your privacy\n/cancel - cancel the current operation"
+          usage = "Hello! I am #{Global::BOT_NAME}, I am your NUS personal assistant at your service! I can guide you around NUS, get your NUSMods timetable, and lots more!\n\nYou can control me by sending these commands:\n\n/setmodurl - sets your nusmods url\n/listmods - list your modules\n/getmod - get a particular module\n/today - get your schedule for today\n/todayme - guide to get today's schedule\n/nextclass - get your next class schedule\n/setprivacy - protects your privacy\n/cancel - cancel the current operation"
 
           bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
           bot.send_message(chat_id: message.chat.id, text: "#{usage}")

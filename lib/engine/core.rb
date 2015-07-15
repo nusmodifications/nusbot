@@ -205,6 +205,7 @@ module NUSBotgram
 
       mod_code = json_result["ModuleCode"]
       mod_title = json_result["ModuleTitle"]
+      exam_date = json_result["ExamDate"]
       timetable = json_result["Timetable"]
       lecture_periods = json_result["LecturePeriods"]
       tutorial_periods = json_result["TutorialPeriods"]
@@ -225,7 +226,7 @@ module NUSBotgram
           # Replace JSON hash with `_key` returns the same result
           if class_no.eql?(value) && lesson_type[0, 3].upcase.eql?(module_type)
             @@redis.hset("users", telegram_id, uri_code)
-            store_json(hash_key, uri, mod_code, mod_title, class_no, week_text, day_text, start_time, end_time, venue, lecture_periods, lesson_type, tutorial_periods)
+            store_json(hash_key, uri, mod_code, mod_title, exam_date, class_no, week_text, day_text, start_time, end_time, venue, lecture_periods, lesson_type, tutorial_periods)
           end
         else
           # Customized JSON hash
@@ -244,15 +245,15 @@ module NUSBotgram
               @@redis.hset("users", telegram_id, uri_code)
               is_deleted = true
 
-              store_json(hash_key, uri, mod_code, mod_title, class_no, week_text, day_text, start_time, end_time, venue, lecture_periods, lesson_type, tutorial_periods)
+              store_json(hash_key, uri, mod_code, mod_title, exam_date, class_no, week_text, day_text, start_time, end_time, venue, lecture_periods, lesson_type, tutorial_periods)
             elsif user_code == uri_code && !is_deleted
               ldelete_keys(hkey)
               @@redis.hset("users", telegram_id, uri_code)
               is_deleted = true
 
-              store_json(hash_key, uri, mod_code, mod_title, class_no, week_text, day_text, start_time, end_time, venue, lecture_periods, lesson_type, tutorial_periods)
+              store_json(hash_key, uri, mod_code, mod_title, exam_date, class_no, week_text, day_text, start_time, end_time, venue, lecture_periods, lesson_type, tutorial_periods)
             else
-              store_json(hash_key, uri, mod_code, mod_title, class_no, week_text, day_text, start_time, end_time, venue, lecture_periods, lesson_type, tutorial_periods)
+              store_json(hash_key, uri, mod_code, mod_title, exam_date, class_no, week_text, day_text, start_time, end_time, venue, lecture_periods, lesson_type, tutorial_periods)
             end
           end
         end
@@ -263,10 +264,11 @@ module NUSBotgram
 
     private
 
-    def store_json(hash_key, uri, mod_code, mod_title, class_no, week_text, day_text, start_time, end_time, venue, lecture_periods, lesson_type, tutorial_periods)
+    def store_json(hash_key, uri, mod_code, mod_title, exam_date, class_no, week_text, day_text, start_time, end_time, venue, lecture_periods, lesson_type, tutorial_periods)
       @@redis.rpush("#{hash_key}:#{mod_code}", [:uri => uri,
                                                 :module_code => mod_code,
                                                 :module_title => mod_title,
+                                                :exam_date => exam_date,
                                                 :class_no => class_no,
                                                 :week_text => week_text,
                                                 :lesson_type => lesson_type,
