@@ -2,31 +2,36 @@ require 'typhoeus'
 require 'virtus'
 require 'multi_json'
 
-require_relative "nusbotgram/version"
+require_relative 'nusbotgram/version'
 
-require_relative "nusbotgram/data_types/base"
-require_relative "nusbotgram/data_types/audio"
-require_relative "nusbotgram/data_types/channel"
-require_relative "nusbotgram/data_types/contact"
-require_relative "nusbotgram/data_types/photo_size"
-require_relative "nusbotgram/data_types/user"
-require_relative "nusbotgram/data_types/sticker"
-require_relative "nusbotgram/data_types/video"
+require_relative 'nusbotgram/data_types/base'
+require_relative 'nusbotgram/data_types/audio'
+require_relative 'nusbotgram/data_types/channel'
+require_relative 'nusbotgram/data_types/contact'
+require_relative 'nusbotgram/data_types/photo_size'
+require_relative 'nusbotgram/data_types/user'
+require_relative 'nusbotgram/data_types/sticker'
+require_relative 'nusbotgram/data_types/video'
 
-require_relative "nusbotgram/data_types/document"
-require_relative "nusbotgram/data_types/force_reply"
-require_relative "nusbotgram/data_types/group_chat"
-require_relative "nusbotgram/data_types/location"
-require_relative "nusbotgram/data_types/message"
-require_relative "nusbotgram/data_types/reply_keyboard_hide"
-require_relative "nusbotgram/data_types/reply_keyboard_markup"
-require_relative "nusbotgram/data_types/update"
-require_relative "nusbotgram/data_types/user_profile_photos"
+require_relative 'nusbotgram/data_types/document'
+require_relative 'nusbotgram/data_types/force_reply'
+require_relative 'nusbotgram/data_types/group_chat'
+require_relative 'nusbotgram/data_types/location'
+require_relative 'nusbotgram/data_types/message'
+require_relative 'nusbotgram/data_types/reply_keyboard_hide'
+require_relative 'nusbotgram/data_types/reply_keyboard_markup'
+require_relative 'nusbotgram/data_types/update'
+require_relative 'nusbotgram/data_types/user_profile_photos'
 
-require_relative "nusbotgram/bot"
-require_relative "nusbotgram/api_response"
+require_relative 'nusbotgram/bot'
+require_relative 'nusbotgram/api_response'
 
-require_relative "engine/core"
+require_relative 'engine/core'
+require_relative 'config/global'
+require_relative 'model/models'
+
+require_relative 'common/algorithms'
+require_relative 'common/query_pattern'
 
 module NUSBotgram
   module Errors

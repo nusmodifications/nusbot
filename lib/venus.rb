@@ -3,8 +3,6 @@ require 'json'
 require 'yaml'
 
 require_relative 'nus_botgram'
-require_relative 'config/global'
-require_relative 'model/models'
 
 module NUSBotgram
   class Venus
