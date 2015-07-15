@@ -41,5 +41,12 @@ module NUSBotgram
     TYPING_ACTION = "typing"
     UNRECOGNIZED_COMMAND_RESPONSE = "Unrecognized command. Say what?"
     CUSTOM_TODAY_KEYBOARD = [%w(Today), %w(DLEC), %w(LAB), %w(LEC), %w(PLEC), %w(PTUT), %w(REC), %w(SEC), %w(SEM), %w(TUT), %w(TUT2), %w(TUT3)]
+
+    # Transaction State
+    NOT_READY = 0
+    SENT = 1
+    IN_TRANSIT = 2
+    ERR = 3
+    INACTIVE = 4
   end
 end

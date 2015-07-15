@@ -282,6 +282,20 @@ module NUSBotgram
 
     public
 
+    def save_state_transactions(telegram_id, command, state, *args)
+      @@redis.select(0)
+      @@redis.hmset("users:state:#{telegram_id}", command, state, *args)
+    end
+
+    public
+
+    def remove_state_transactions(telegram_id, command)
+      @@redis.select(0)
+      @@redis.hdel("users:state:#{telegram_id}", command)
+    end
+
+    public
+
     def check_daytime(time)
       if time[0, 2].to_i >= 0 && time[0, 2].to_i <= 11
         return 0
