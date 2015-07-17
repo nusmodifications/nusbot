@@ -305,6 +305,21 @@ module NUSBotgram
 
     public
 
+    def save_message_history(telegram_id, database, chat_id, message_id, from_user_first, from_user_last, from_user_username, user_id, message_date, message)
+      @@redis.select(database)
+      @@redis.rpush("users:history:#{telegram_id}-logs",
+                    [:chat_id => chat_id,
+                     :message_id => message_id,
+                     :user_first => from_user_first,
+                     :user_last => from_user_last,
+                     :username => from_user_username,
+                     :userid => user_id,
+                     :message_date => message_date,
+                     :message => message].to_json)
+    end
+
+    public
+
     def check_daytime(time)
       if time[0, 2].to_i >= 0 && time[0, 2].to_i <= 11
         return 0

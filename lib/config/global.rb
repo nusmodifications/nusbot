@@ -42,6 +42,13 @@ module NUSBotgram
 
     # Action types
     TYPING_ACTION = "typing"
+    UPLOAD_PHOTO_ACTION = "upload_photo"
+    RECORD_VIDEO_ACTION = "record_video"
+    UPLOAD_VIDEO_ACTION = "upload_video"
+    RECORD_AUDIO_ACTION = "record_audio"
+    UPLOAD_AUDIO_ACTION = "upload_audio"
+    UPLOAD_DOCUMENT_ACTION = "upload_document"
+    FIND_LOCATION_ACTION = "find_location"
     UNRECOGNIZED_COMMAND_RESPONSE = "Unrecognized command. Say what?"
     CUSTOM_TODAY_KEYBOARD = [%w(Today), %w(DLEC), %w(LAB), %w(LEC), %w(PLEC), %w(PTUT), %w(REC), %w(SEC), %w(SEM), %w(TUT), %w(TUT2), %w(TUT3)]
 
