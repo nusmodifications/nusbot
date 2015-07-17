@@ -19,12 +19,38 @@ module NUSBotgram
     bot.get_updates do |message|
       puts "In chat #{message.chat.id}, @#{message.from.first_name} > @#{message.from.id} said: #{message.text}"
 
+      engine.save_state_transactions(message.from.id, message.text, message.message_id)
+
       case message.text
         when /greet/i
-          bot_reply = "Hello, #{message.from.first_name}!"
+          begin
+            telegram_id = message.from.id
+            command = message.text
+            message_id = message.message_id
 
-          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: bot_reply)
+            last_state = engine.get_state_transactions(telegram_id, command)
+
+            if last_state.eql?("") || last_state == ""
+              bot_reply = "Hello, #{message.from.first_name}!"
+
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: bot_reply)
+              engine.save_state_transactions(telegram_id, command, message_id)
+            else
+              bot_reply = "Hello, #{message.from.first_name}!"
+
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: bot_reply, reply_to_message_id: last_state.to_s)
+              engine.remove_state_transactions(telegram_id, command)
+            end
+          rescue NUSBotgram::Errors::ServiceUnavailableError
+            sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
+          end
         when /^hello$/
           bot_reply = "Hello, #{message.from.first_name}!"
 
