@@ -2,7 +2,6 @@
 
 ### Config ###
 lib/config/config.yml
-Gemfile.lock
 
 ### RubyMine ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
