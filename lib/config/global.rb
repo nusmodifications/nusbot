@@ -20,6 +20,9 @@ module NUSBotgram
     TUTORIAL_TYPE_2 = 'Tutorial Type 2'
     TUTORIAL_TYPE_3 = 'Tutorial Type 3'
 
+    # Bot's Service Messages
+    BOT_SERVICE_OFFLINE = "Bump! I think that Telegram's service is temporary unavailable..."
+
     # Venus Bot's reply messages
     SEND_NUSMODS_URI_MESSAGE = "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)"
     REGISTERED_NUSMODS_URI_MESSAGE = "Awesome! I have registered your NUSMods URL"

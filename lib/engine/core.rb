@@ -282,6 +282,15 @@ module NUSBotgram
 
     public
 
+    def get_state_transactions(telegram_id, command)
+      @@redis.select(0)
+      last_state = @@redis.hget("users:state:#{telegram_id}", command)
+
+      last_state
+    end
+
+    public
+
     def save_state_transactions(telegram_id, command, state, *args)
       @@redis.select(0)
       @@redis.hmset("users:state:#{telegram_id}", command, state, *args)
