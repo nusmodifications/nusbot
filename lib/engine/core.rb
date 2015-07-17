@@ -8,8 +8,6 @@ require 'redis'
 module NUSBotgram
   class Core
     CONFIG = YAML.load_file("../lib/config/config.yml")
-    DB_TOKEN = Digest::MD5.hexdigest(CONFIG[3][:DB_TOKEN])
-    DB_KEY = Digest::MD5.hexdigest(CONFIG[3][:DB_KEY])
     API_ENDPOINT = 'http://api.nusmods.com'
     REDIRECT_ENDPOINT = 'https://nusmods.com/redirect.php?timetable='
 
