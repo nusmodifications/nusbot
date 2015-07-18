@@ -5,6 +5,8 @@ module NUSBotgram
     START_YEAR = 2015
     END_YEAR = 2016
     SEM = 1
+    X_MINUTES = 15
+    X_MINUTES_BUFFER = 30
     DAY_REGEX = /([a-zA-Z]{6,})/
 
     # Lesson Types

@@ -17,6 +17,8 @@ module NUSBotgram
     custom_today = ""
 
     bot.get_updates do |message|
+      time_now = Time.now.getlocal('+08:00')
+
       engine.save_message_history(message.from.id, 1, message.chat.id, message.message_id, message.from.first_name, message.from.last_name, message.from.username, message.from.id, message.date, message.text)
       puts "In chat #{message.chat.id}, @#{message.from.first_name} > @#{message.from.id} said: #{message.text}"
 
@@ -28,21 +30,23 @@ module NUSBotgram
             telegram_id = message.from.id
             command = message.text
             message_id = message.message_id
+            recv_date = Time.parse(message.date.to_s)
 
+            time_diff = (time_now.to_i - recv_date.to_i) / 60
             last_state = engine.get_state_transactions(telegram_id, command)
 
-            if last_state.eql?("") || last_state == ""
+            if time_diff < Global::X_MINUTES
               bot_reply = "Hello, #{message.from.first_name}!"
 
               bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
               bot.send_message(chat_id: message.chat.id, text: bot_reply)
               engine.save_state_transactions(telegram_id, command, message_id)
-            else
-              bot_reply = "Hello, #{message.from.first_name}!"
+            elsif time_diff > Global::X_MINUTES && time_diff < Global::X_MINUTES_BUFFER
+                bot_reply = "Hello, #{message.from.first_name}!"
 
-              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-              bot.send_message(chat_id: message.chat.id, text: bot_reply, reply_to_message_id: last_state.to_s)
-              engine.remove_state_transactions(telegram_id, command)
+                bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: message.chat.id, text: bot_reply, reply_to_message_id: last_state.to_s)
+                engine.remove_state_transactions(telegram_id, command)
             end
           rescue NUSBotgram::Errors::ServiceUnavailableError
             sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
