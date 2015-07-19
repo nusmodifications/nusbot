@@ -9,6 +9,11 @@ module NUSBotgram
     X_MINUTES_BUFFER = 30
     DAY_REGEX = /([a-zA-Z]{6,})/
 
+    # Bot commands
+    SETMODURL = '/setmodurl'
+    LISTMODS = '/listmods'
+    GETMOD = '/getmod'
+
     # Lesson Types
     DESIGN_LECTURE = 'Design Lecture'
     LABORATORY = 'Laboratory'
@@ -24,6 +29,7 @@ module NUSBotgram
 
     # Bot's Service Messages
     BOT_SERVICE_OFFLINE = "Bump! I think that Telegram's service is temporary unavailable..."
+    BOT_CANCEL_MESSAGE = "Zzz... Alright! I will not process this for now!\nBut if you change your mind, just let me know again!"
 
     # Venus Bot's reply messages
     SEND_NUSMODS_URI_MESSAGE = "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)"
