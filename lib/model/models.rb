@@ -26,7 +26,9 @@ module NUSBotgram
 
     public
 
-    def get_mod(telegram_id, bot, engine, mods_ary, message, sticker_collections)
+    def get_mod(telegram_id, bot, engine, message, sticker_collections)
+      mods_ary = Array.new
+
       module_results = engine.get_mod(telegram_id)
       mod_code = message.text.upcase
 
@@ -67,7 +69,10 @@ module NUSBotgram
 
     public
 
-    def get_today(telegram_id, bot, engine, day_today, days_ary, message, sticker_collections)
+    def get_today(telegram_id, bot, engine, message, sticker_collections)
+      days_ary = Array.new
+      day_today = Time.now.strftime("%A")
+
       module_results = engine.get_mod(telegram_id)
 
       module_results.each do |key|
@@ -251,7 +256,10 @@ module NUSBotgram
 
     public
 
-    def predict_next_class(telegram_id, bot, engine, current_time_now, day_today, message, sticker_collections)
+    def predict_next_class(telegram_id, bot, engine, message, sticker_collections)
+      current_time_now = Time.now.strftime("%R")
+      day_today = Time.now.strftime("%A")
+
       algorithms = NUSBotgram::Algorithms.new
       module_results = engine.get_mod(telegram_id)
 
