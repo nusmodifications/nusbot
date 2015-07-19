@@ -303,6 +303,30 @@ module NUSBotgram
 
     public
 
+    def save_last_transaction(telegram_id, state)
+      @@redis.select(0)
+      @@redis.rpush("users:last_state:#{telegram_id}", state)
+    end
+
+    public
+
+    def peek_last_transaction(telegram_id)
+      @@redis.select(0)
+      peeked_state = @@redis.rpop("users:last_state:#{telegram_id}")
+      @@redis.rpush("users:last_state:#{telegram_id}", peeked_state)
+
+      peeked_state
+    end
+
+    public
+
+    def cancel_last_transaction(telegram_id)
+      @@redis.select(0)
+      @@redis.rpop("users:last_state:#{telegram_id}")
+    end
+
+    public
+
     def save_message_history(telegram_id, database, chat_id, message_id, from_user_first, from_user_last, from_user_username, user_id, message_date, message)
       @@redis.select(database)
       @@redis.rpush("users:history:#{telegram_id}-logs",
