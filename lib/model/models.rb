@@ -22,6 +22,8 @@ module NUSBotgram
 
       bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
       bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+
+      engine.remove_state_transactions(telegram_id, Global::LISTMODS)
     end
 
     public
@@ -48,6 +50,8 @@ module NUSBotgram
       if mods_ary.uniq.include?(mod_code)
         bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
         bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+
+        engine.remove_state_transactions(telegram_id, Global::GETMOD)
       else
         bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
         sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
@@ -93,6 +97,8 @@ module NUSBotgram
         close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
         bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
         bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!", reply_markup: close_keyboard)
+
+        engine.remove_state_transactions(telegram_id, Global::TODAYME)
       elsif !days_ary.uniq.include?(day_today) && day_today.eql?("Saturday")
         close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
         bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
@@ -160,6 +166,8 @@ module NUSBotgram
           close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
           bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
           bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!", reply_markup: close_keyboard)
+
+          engine.remove_state_transactions(telegram_id, Global::TODAYSTAR)
         elsif !days_ary.uniq.include?(day_today) && day_today.eql?("Saturday")
           close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
           bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
@@ -213,36 +221,49 @@ module NUSBotgram
           mod_uri = msg.text
           telegram_id = msg.from.id
 
-          status_code = engine.analyze_uri(mod_uri)
-
-          if status_code == 200
-            engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
-
-            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-            bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+          if mod_uri =~ /^\/cancel$/i
+            engine.cancel_last_transaction(telegram_id)
+            engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-            bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
-
-            get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, msg, sticker_collections)
-          elsif status_code == 403 || status_code == 404
-            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-            bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+            bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
-
-            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+            bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
           else
-            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-            bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+            status_code = engine.analyze_uri(mod_uri)
 
-            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+            if status_code == 200
+              engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+              bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+
+              engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
+              bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
+
+              get_today_pattern(telegram_id, bot, engine, day_today, lesson_type, msg, sticker_collections)
+            elsif status_code == 403 || status_code == 404
+              bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+              bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+              bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+            else
+              bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+              bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+              bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+            end
           end
         end
       else

@@ -251,6 +251,8 @@ module NUSBotgram
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                     bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+
+                    engine.remove_state_transactions(telegram_id, Global::SETMODURL)
                   elsif status_code == 403 || status_code == 404
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                     bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
@@ -300,6 +302,8 @@ module NUSBotgram
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                     bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                    engine.remove_state_transactions(telegram_id, Global::SETMODURL)
                   elsif status_code == 403 || status_code == 404
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                     bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
@@ -368,6 +372,8 @@ module NUSBotgram
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
+                      engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE)
 
@@ -427,6 +433,8 @@ module NUSBotgram
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                      engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE, reply_to_message_id: last_state.to_s)
@@ -506,6 +514,8 @@ module NUSBotgram
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
+                      engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::DISPLAY_MODULE_MESSAGE, reply_markup: force_reply)
 
@@ -580,6 +590,8 @@ module NUSBotgram
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                      engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::DISPLAY_MODULE_MESSAGE, reply_markup: force_reply, reply_to_message_id: last_state.to_s)
@@ -694,6 +706,8 @@ module NUSBotgram
                             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                             bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
+                            engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
                             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                             bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
@@ -798,6 +812,8 @@ module NUSBotgram
 
                             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                             bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                            engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                             bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
@@ -910,6 +926,8 @@ module NUSBotgram
                         bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                         bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
+                        engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
                         bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                         bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
@@ -999,6 +1017,8 @@ module NUSBotgram
 
                         bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                         bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                        engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                         bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                         bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
@@ -1104,6 +1124,8 @@ module NUSBotgram
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
+                      engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::NEXT_CLASS_MESSAGE)
 
@@ -1164,6 +1186,8 @@ module NUSBotgram
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                      engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::NEXT_CLASS_MESSAGE, reply_to_message_id: last_state.to_s)

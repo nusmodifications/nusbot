@@ -14,6 +14,7 @@ module NUSBotgram
     LISTMODS = '/listmods'
     GETMOD = '/getmod'
     TODAYME = '/todayme'
+    TODAYSTAR = '/today*'
 
     # Lesson Types
     DESIGN_LECTURE = 'Design Lecture'
