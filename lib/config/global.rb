@@ -13,6 +13,7 @@ module NUSBotgram
     SETMODURL = '/setmodurl'
     LISTMODS = '/listmods'
     GETMOD = '/getmod'
+    TODAYME = '/todayme'
 
     # Lesson Types
     DESIGN_LECTURE = 'Design Lecture'
@@ -29,7 +30,11 @@ module NUSBotgram
 
     # Bot's Service Messages
     BOT_SERVICE_OFFLINE = "Bump! I think that Telegram's service is temporary unavailable..."
-    BOT_CANCEL_MESSAGE = "Zzz... Alright! I will not process this for now!\nBut if you change your mind, just let me know again!"
+    BOT_SETMODURL_CANCEL = "The command 'setmodurl' has been cancelled. Anything else I can do for you?"
+    BOT_GETMOD_CANCEL = "The command 'getmod' has been cancelled. Anything else I can do for you?"
+    BOT_TODAYME_CANCEL = "The command 'todayme' has been cancelled. Anything else I can do for you?"
+    BOT_CANCEL_MESSAGE = "Alright! I will not process this for now!\nBut if you change your mind, just let me know again!\n\nSend /help for a list of commands"
+    BOT_CANCEL_NO_STATE = "No active command to cancel. I wasn't doing anything anyway. Zzzzz..."
 
     # Venus Bot's reply messages
     SEND_NUSMODS_URI_MESSAGE = "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)"

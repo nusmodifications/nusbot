@@ -225,7 +225,7 @@ module NUSBotgram
 
             if time_diff <= Global::X_MINUTES
               engine.save_last_transaction(telegramid, message_id)
-              
+
               force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
               bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
               bot.send_message(chat_id: message.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
@@ -234,9 +234,12 @@ module NUSBotgram
                 mod_uri = msg.text
                 telegram_id = msg.from.id
 
-                if msg.text =~ /^\/cancel$/i
+                if mod_uri =~ /^\/cancel$/i
                   engine.cancel_last_transaction(telegram_id)
                   engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
                   bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
@@ -280,9 +283,12 @@ module NUSBotgram
                 mod_uri = msg.text
                 telegram_id = msg.from.id
 
-                if msg.text =~ /^\/cancel$/i
+                if mod_uri =~ /^\/cancel$/i
                   engine.cancel_last_transaction(telegram_id)
                   engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
                   bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
@@ -344,36 +350,47 @@ module NUSBotgram
                   mod_uri = msg.text
                   telegram_id = msg.from.id
 
-                  status_code = engine.analyze_uri(mod_uri)
-
-                  if status_code == 200
-                    engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+                  if mod_uri =~ /^\/cancel$/i
+                    engine.cancel_last_transaction(telegram_id)
+                    engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE)
-
-                    models.list_mods(telegram_id, bot, engine, msg)
-                  elsif status_code == 403 || status_code == 404
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
                   else
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+                    status_code = engine.analyze_uri(mod_uri)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+                    if status_code == 200
+                      engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE)
+
+                      models.list_mods(telegram_id, bot, engine, msg)
+                    elsif status_code == 403 || status_code == 404
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                    else
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                    end
                   end
                 end
               else
@@ -393,36 +410,47 @@ module NUSBotgram
                   mod_uri = msg.text
                   telegram_id = msg.from.id
 
-                  status_code = engine.analyze_uri(mod_uri)
-
-                  if status_code == 200
-                    engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+                  if mod_uri =~ /^\/cancel$/i
+                    engine.cancel_last_transaction(telegram_id)
+                    engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                    models.list_mods(telegram_id, bot, engine, msg)
-                  elsif status_code == 403 || status_code == 404
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
                   else
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+                    status_code = engine.analyze_uri(mod_uri)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+                    if status_code == 200
+                      engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      models.list_mods(telegram_id, bot, engine, msg)
+                    elsif status_code == 403 || status_code == 404
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                    else
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                    end
                   end
                 end
               else
@@ -460,38 +488,49 @@ module NUSBotgram
                   mod_uri = msg.text
                   telegram_id = msg.from.id
 
-                  status_code = engine.analyze_uri(mod_uri)
-
-                  if status_code == 200
-                    engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+                  if mod_uri =~ /^\/cancel$/i
+                    engine.cancel_last_transaction(telegram_id)
+                    engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::DISPLAY_MODULE_MESSAGE, reply_markup: force_reply)
-
-                    bot.update do |mod|
-                      models.get_mod(telegram_id, bot, engine, mod, sticker_collections)
-                    end
-                  elsif status_code == 403 || status_code == 404
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_GETMOD_CANCEL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
                   else
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+                    status_code = engine.analyze_uri(mod_uri)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: NUSMODS_URI_CANCEL_MESSAGE)
+                    if status_code == 200
+                      engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::DISPLAY_MODULE_MESSAGE, reply_markup: force_reply)
+
+                      bot.update do |mod|
+                        models.get_mod(telegram_id, bot, engine, mod, sticker_collections)
+                      end
+                    elsif status_code == 403 || status_code == 404
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                    else
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: NUSMODS_URI_CANCEL_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                    end
                   end
                 end
               else
@@ -500,7 +539,18 @@ module NUSBotgram
                 bot.send_message(chat_id: message.chat.id, text: Global::SEARCH_MODULES_MESSAGE, reply_markup: force_reply)
 
                 bot.update do |msg|
-                  models.get_mod(telegramid, bot, engine, msg, sticker_collections)
+                  if msg.text =~ /^\/cancel$/i
+                    engine.cancel_last_transaction(telegram_id)
+                    engine.remove_state_transactions(telegram_id, Global::GETMOD)
+
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_GETMOD_CANCEL)
+
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
+                  else
+                    models.get_mod(telegramid, bot, engine, msg, sticker_collections)
+                  end
                 end
               end
             elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
@@ -513,38 +563,49 @@ module NUSBotgram
                   mod_uri = msg.text
                   telegram_id = msg.from.id
 
-                  status_code = engine.analyze_uri(mod_uri)
-
-                  if status_code == 200
-                    engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+                  if mod_uri =~ /^\/cancel$/i
+                    engine.cancel_last_transaction(telegram_id)
+                    engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::DISPLAY_MODULE_MESSAGE, reply_markup: force_reply, reply_to_message_id: last_state.to_s)
-
-                    bot.update do |mod|
-                      models.get_mod(telegram_id, bot, engine, mod, sticker_collections)
-                    end
-                  elsif status_code == 403 || status_code == 404
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
                   else
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+                    status_code = engine.analyze_uri(mod_uri)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+                    if status_code == 200
+                      engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::DISPLAY_MODULE_MESSAGE, reply_markup: force_reply, reply_to_message_id: last_state.to_s)
+
+                      bot.update do |mod|
+                        models.get_mod(telegram_id, bot, engine, mod, sticker_collections)
+                      end
+                    elsif status_code == 403 || status_code == 404
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                    else
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                    end
                   end
                 end
               else
@@ -554,7 +615,18 @@ module NUSBotgram
                 bot.send_message(chat_id: message.chat.id, text: Global::SEARCH_MODULES_MESSAGE, reply_markup: force_reply, reply_to_message_id: last_state.to_s)
 
                 bot.update do |msg|
-                  models.get_mod(telegram_id, bot, engine, msg, sticker_collections)
+                  if msg.text =~ /^\/cancel$/i
+                    engine.cancel_last_transaction(telegram_id)
+                    engine.remove_state_transactions(telegram_id, Global::GETMOD)
+
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_GETMOD_CANCEL)
+
+                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
+                  else
+                    models.get_mod(telegram_id, bot, engine, msg, sticker_collections)
+                  end
                 end
               end
             end
@@ -584,77 +656,99 @@ module NUSBotgram
               bot.update do |response|
                 user_reply = response.text
 
-                if user_reply.downcase.eql?("today")
-                  if !engine.db_exist(response.from.id)
-                    force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
-                    bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: response.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
+                if user_reply =~ /^\/cancel$/i
+                  engine.cancel_last_transaction(telegram_id)
+                  engine.remove_state_transactions(telegram_id, Global::TODAYME)
 
-                    bot.update do |msg|
-                      mod_uri = msg.text
-                      telegram_id = msg.from.id
+                  bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: response.chat.id, text: Global::BOT_TODAYME_CANCEL)
 
-                      status_code = engine.analyze_uri(mod_uri)
+                  bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: response.chat.id, text: Global::BOT_CANCEL_MESSAGE)
+                else
+                  if user_reply.downcase.eql?("today")
+                    if !engine.db_exist(response.from.id)
+                      force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+                      bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: response.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
 
-                      if status_code == 200
-                        engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
+                      bot.update do |msg|
+                        mod_uri = msg.text
+                        telegram_id = msg.from.id
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+                        if mod_uri =~ /^\/cancel$/i
+                          engine.cancel_last_transaction(telegram_id)
+                          engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
+                          bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                          bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
-                        models.get_today(telegram_id, bot, engine, msg, sticker_collections)
-                      elsif status_code == 403 || status_code == 404
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+                          bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                          bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
+                        else
+                          status_code = engine.analyze_uri(mod_uri)
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+                          if status_code == 200
+                            engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
-                      else
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                            models.get_today(telegram_id, bot, engine, msg, sticker_collections)
+                          elsif status_code == 403 || status_code == 404
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                          else
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                          end
+                        end
                       end
-                    end
-                  else
-                    telegram_id = response.from.id
-                    bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: response.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
+                    else
+                      telegram_id = response.from.id
+                      bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: response.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-                    models.get_today(telegram_id, bot, engine, response, sticker_collections)
+                      models.get_today(telegram_id, bot, engine, response, sticker_collections)
+                    end
+                  elsif user_reply.downcase.eql?("dlec")
+                    models.today_star_command(bot, engine, response, Global::DESIGN_LECTURE, sticker_collections)
+                  elsif user_reply.downcase.eql?("lab")
+                    models.today_star_command(bot, engine, response, Global::LABORATORY, sticker_collections)
+                  elsif user_reply.downcase.eql?("lec")
+                    models.today_star_command(bot, engine, response, Global::LECTURE, sticker_collections)
+                  elsif user_reply.downcase.eql?("plec")
+                    models.today_star_command(bot, engine, response, Global::PACKAGED_LECTURE, sticker_collections)
+                  elsif user_reply.downcase.eql?("ptut")
+                    models.today_star_command(bot, engine, response, Global::PACKAGED_TUTORIAL, sticker_collections)
+                  elsif user_reply.downcase.eql?("rec")
+                    models.today_star_command(bot, engine, response, Global::RECITATION, sticker_collections)
+                  elsif user_reply.downcase.eql?("sec")
+                    models.today_star_command(bot, engine, response, Global::SECTIONAL_TEACHING, sticker_collections)
+                  elsif user_reply.downcase.eql?("sem")
+                    models.today_star_command(bot, engine, response, Global::SEMINAR_STYLE_MODULE_CLASS, sticker_collections)
+                  elsif user_reply.downcase.eql?("tut")
+                    models.today_star_command(bot, engine, response, Global::TUTORIAL, sticker_collections)
+                  elsif user_reply.downcase.eql?("tut2")
+                    models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_2, sticker_collections)
+                  elsif user_reply.downcase.eql?("tut3")
+                    models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_3, sticker_collections)
                   end
-                elsif user_reply.downcase.eql?("dlec")
-                  models.today_star_command(bot, engine, response, Global::DESIGN_LECTURE, sticker_collections)
-                elsif user_reply.downcase.eql?("lab")
-                  models.today_star_command(bot, engine, response, Global::LABORATORY, sticker_collections)
-                elsif user_reply.downcase.eql?("lec")
-                  models.today_star_command(bot, engine, response, Global::LECTURE, sticker_collections)
-                elsif user_reply.downcase.eql?("plec")
-                  models.today_star_command(bot, engine, response, Global::PACKAGED_LECTURE, sticker_collections)
-                elsif user_reply.downcase.eql?("ptut")
-                  models.today_star_command(bot, engine, response, Global::PACKAGED_TUTORIAL, sticker_collections)
-                elsif user_reply.downcase.eql?("rec")
-                  models.today_star_command(bot, engine, response, Global::RECITATION, sticker_collections)
-                elsif user_reply.downcase.eql?("sec")
-                  models.today_star_command(bot, engine, response, Global::SECTIONAL_TEACHING, sticker_collections)
-                elsif user_reply.downcase.eql?("sem")
-                  models.today_star_command(bot, engine, response, Global::SEMINAR_STYLE_MODULE_CLASS, sticker_collections)
-                elsif user_reply.downcase.eql?("tut")
-                  models.today_star_command(bot, engine, response, Global::TUTORIAL, sticker_collections)
-                elsif user_reply.downcase.eql?("tut2")
-                  models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_2, sticker_collections)
-                elsif user_reply.downcase.eql?("tut3")
-                  models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_3, sticker_collections)
                 end
 
                 user_reply.clear
@@ -667,77 +761,99 @@ module NUSBotgram
               bot.update do |response|
                 user_reply = response.text
 
-                if user_reply.downcase.eql?("today")
-                  if !engine.db_exist(response.from.id)
-                    force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
-                    bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: response.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply, reply_to_message_id: last_state.to_s)
+                if user_reply =~ /^\/cancel$/i
+                  engine.cancel_last_transaction(telegram_id)
+                  engine.remove_state_transactions(telegram_id, Global::TODAYME)
 
-                    bot.update do |msg|
-                      mod_uri = msg.text
-                      telegram_id = msg.from.id
+                  bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: response.chat.id, text: Global::BOT_TODAYME_CANCEL)
 
-                      status_code = engine.analyze_uri(mod_uri)
+                  bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: response.chat.id, text: Global::BOT_CANCEL_MESSAGE)
+                else
+                  if user_reply.downcase.eql?("today")
+                    if !engine.db_exist(response.from.id)
+                      force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+                      bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: response.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply, reply_to_message_id: last_state.to_s)
 
-                      if status_code == 200
-                        engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
+                      bot.update do |msg|
+                        mod_uri = msg.text
+                        telegram_id = msg.from.id
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+                        if mod_uri =~ /^\/cancel$/i
+                          engine.cancel_last_transaction(telegram_id)
+                          engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
+                          bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                          bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
-                        models.get_today(telegram_id, bot, engine, msg, sticker_collections)
-                      elsif status_code == 403 || status_code == 404
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+                          bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                          bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
+                        else
+                          status_code = engine.analyze_uri(mod_uri)
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+                          if status_code == 200
+                            engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
-                      else
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                            models.get_today(telegram_id, bot, engine, msg, sticker_collections)
+                          elsif status_code == 403 || status_code == 404
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                          else
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                            bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                            bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                          end
+                        end
                       end
-                    end
-                  else
-                    telegram_id = response.from.id
-                    bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: response.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
+                    else
+                      telegram_id = response.from.id
+                      bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: response.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                    models.get_today(telegram_id, bot, engine, response, sticker_collections)
+                      models.get_today(telegram_id, bot, engine, response, sticker_collections)
+                    end
+                  elsif user_reply.downcase.eql?("dlec")
+                    models.today_star_command(bot, engine, response, Global::DESIGN_LECTURE, sticker_collections)
+                  elsif user_reply.downcase.eql?("lab")
+                    models.today_star_command(bot, engine, response, Global::LABORATORY, sticker_collections)
+                  elsif user_reply.downcase.eql?("lec")
+                    models.today_star_command(bot, engine, response, Global::LECTURE, sticker_collections)
+                  elsif user_reply.downcase.eql?("plec")
+                    models.today_star_command(bot, engine, response, Global::PACKAGED_LECTURE, sticker_collections)
+                  elsif user_reply.downcase.eql?("ptut")
+                    models.today_star_command(bot, engine, response, Global::PACKAGED_TUTORIAL, sticker_collections)
+                  elsif user_reply.downcase.eql?("rec")
+                    models.today_star_command(bot, engine, response, Global::RECITATION, sticker_collections)
+                  elsif user_reply.downcase.eql?("sec")
+                    models.today_star_command(bot, engine, response, Global::SECTIONAL_TEACHING, sticker_collections)
+                  elsif user_reply.downcase.eql?("sem")
+                    models.today_star_command(bot, engine, response, Global::SEMINAR_STYLE_MODULE_CLASS, sticker_collections)
+                  elsif user_reply.downcase.eql?("tut")
+                    models.today_star_command(bot, engine, response, Global::TUTORIAL, sticker_collections)
+                  elsif user_reply.downcase.eql?("tut2")
+                    models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_2, sticker_collections)
+                  elsif user_reply.downcase.eql?("tut3")
+                    models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_3, sticker_collections)
                   end
-                elsif user_reply.downcase.eql?("dlec")
-                  models.today_star_command(bot, engine, response, Global::DESIGN_LECTURE, sticker_collections)
-                elsif user_reply.downcase.eql?("lab")
-                  models.today_star_command(bot, engine, response, Global::LABORATORY, sticker_collections)
-                elsif user_reply.downcase.eql?("lec")
-                  models.today_star_command(bot, engine, response, Global::LECTURE, sticker_collections)
-                elsif user_reply.downcase.eql?("plec")
-                  models.today_star_command(bot, engine, response, Global::PACKAGED_LECTURE, sticker_collections)
-                elsif user_reply.downcase.eql?("ptut")
-                  models.today_star_command(bot, engine, response, Global::PACKAGED_TUTORIAL, sticker_collections)
-                elsif user_reply.downcase.eql?("rec")
-                  models.today_star_command(bot, engine, response, Global::RECITATION, sticker_collections)
-                elsif user_reply.downcase.eql?("sec")
-                  models.today_star_command(bot, engine, response, Global::SECTIONAL_TEACHING, sticker_collections)
-                elsif user_reply.downcase.eql?("sem")
-                  models.today_star_command(bot, engine, response, Global::SEMINAR_STYLE_MODULE_CLASS, sticker_collections)
-                elsif user_reply.downcase.eql?("tut")
-                  models.today_star_command(bot, engine, response, Global::TUTORIAL, sticker_collections)
-                elsif user_reply.downcase.eql?("tut2")
-                  models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_2, sticker_collections)
-                elsif user_reply.downcase.eql?("tut3")
-                  models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_3, sticker_collections)
                 end
 
                 user_reply.clear
@@ -776,36 +892,47 @@ module NUSBotgram
                     mod_uri = msg.text
                     telegram_id = msg.from.id
 
-                    status_code = engine.analyze_uri(mod_uri)
-
-                    if status_code == 200
-                      engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+                    if mod_uri =~ /^\/cancel$/i
+                      engine.cancel_last_transaction(telegram_id)
+                      engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
-
-                      models.get_today(telegram_id, bot, engine, msg, sticker_collections)
-                    elsif status_code == 403 || status_code == 404
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
                     else
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+                      status_code = engine.analyze_uri(mod_uri)
 
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+                      if status_code == 200
+                        engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
+
+                        models.get_today(telegram_id, bot, engine, msg, sticker_collections)
+                      elsif status_code == 403 || status_code == 404
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                      else
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                      end
                     end
                   end
                 else
@@ -855,36 +982,47 @@ module NUSBotgram
                     mod_uri = msg.text
                     telegram_id = msg.from.id
 
-                    status_code = engine.analyze_uri(mod_uri)
-
-                    if status_code == 200
-                      engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+                    if mod_uri =~ /^\/cancel$/i
+                      engine.cancel_last_transaction(telegram_id)
+                      engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                      models.get_today(telegram_id, bot, engine, msg, sticker_collections)
-                    elsif status_code == 403 || status_code == 404
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
                     else
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+                      status_code = engine.analyze_uri(mod_uri)
 
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+                      if status_code == 200
+                        engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                        models.get_today(telegram_id, bot, engine, msg, sticker_collections)
+                      elsif status_code == 403 || status_code == 404
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                      else
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                        bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                        bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                      end
                     end
                   end
                 else
@@ -948,36 +1086,47 @@ module NUSBotgram
                   mod_uri = msg.text
                   telegram_id = msg.from.id
 
-                  status_code = engine.analyze_uri(mod_uri)
-
-                  if status_code == 200
-                    engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+                  if mod_uri =~ /^\/cancel$/i
+                    engine.cancel_last_transaction(telegram_id)
+                    engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NEXT_CLASS_MESSAGE)
-
-                    models.predict_next_class(telegram_id, bot, engine, msg, sticker_collections)
-                  elsif status_code == 403 || status_code == 404
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
                   else
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+                    status_code = engine.analyze_uri(mod_uri)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+                    if status_code == 200
+                      engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NEXT_CLASS_MESSAGE)
+
+                      models.predict_next_class(telegram_id, bot, engine, msg, sticker_collections)
+                    elsif status_code == 403 || status_code == 404
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                    else
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                    end
                   end
                 end
               else
@@ -998,36 +1147,47 @@ module NUSBotgram
                   mod_uri = msg.text
                   telegram_id = msg.from.id
 
-                  status_code = engine.analyze_uri(mod_uri)
-
-                  if status_code == 200
-                    engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+                  if mod_uri =~ /^\/cancel$/i
+                    engine.cancel_last_transaction(telegram_id)
+                    engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NEXT_CLASS_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                    models.predict_next_class(telegram_id, bot, engine, msg, sticker_collections)
-                  elsif status_code == 403 || status_code == 404
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
 
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
                   else
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+                    status_code = engine.analyze_uri(mod_uri)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+                    if status_code == 200
+                      engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
 
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NEXT_CLASS_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      models.predict_next_class(telegram_id, bot, engine, msg, sticker_collections)
+                    elsif status_code == 403 || status_code == 404
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                    else
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                    end
                   end
                 end
               else
@@ -1050,9 +1210,7 @@ module NUSBotgram
         when /^\/setprivacy$/i
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
         when /^\/cancel$/i
-          telegramid = message.from.id
-          engine.cancel_last_transaction(telegramid)
-          bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
+          bot.send_message(chat_id: message.chat.id, text: Global::BOT_CANCEL_NO_STATE)
         when /^\/start$/i
           question = 'This is an awesome message?'
           answers = NUSBotgram::DataTypes::ReplyKeyboardMarkup.new(keyboard: [%w(YES), %w(NO)], one_time_keyboard: true)
