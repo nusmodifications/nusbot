@@ -329,7 +329,7 @@ module NUSBotgram
 
     def save_message_history(telegram_id, database, chat_id, message_id, from_user_first, from_user_last, from_user_username, user_id, message_date, message)
       @@redis.select(database)
-      @@redis.rpush("users:history:#{telegram_id}-logs",
+      @@redis.lpush("users:history:#{telegram_id}-logs",
                     [:chat_id => chat_id,
                      :message_id => message_id,
                      :user_first => from_user_first,
