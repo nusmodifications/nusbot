@@ -342,6 +342,13 @@ module NUSBotgram
 
     public
 
+    def get_location(database, location_code)
+      @@redis.select(database)
+      @@redis.hget("mapnus:locations:#{location_code}", location_code)
+    end
+
+    public
+
     def check_daytime(time)
       if time[0, 2].to_i >= 0 && time[0, 2].to_i <= 11
         return 0
