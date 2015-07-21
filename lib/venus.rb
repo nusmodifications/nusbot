@@ -210,10 +210,31 @@ module NUSBotgram
           bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
           bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /^\/help$/i
-          usage = "Hello! I am #{Global::BOT_NAME}, I am your NUS personal assistant at your service! I can guide you around NUS, get your NUSMods timetable, and lots more!\n\nYou can control me by sending these commands:\n\n/setmodurl - sets your nusmods url\n/listmods - list your modules\n/getmod - get a particular module\n/today - get your schedule for today\n/todayme - guide to get today's schedule\n/nextclass - get your next class schedule\n/setprivacy - protects your privacy\n/cancel - cancel the current operation"
+          begin
+            telegramid = message.from.id
+            command = message.text
+            message_id = message.message_id
+            recv_date = Time.parse(message.date.to_s)
+            usage = "Hello! I am #{Global::BOT_NAME}, I am your NUS personal assistant at your service! I can guide you around NUS, get your NUSMods timetable, and lots more!\n\nYou can control me by sending these commands:\n\n/setmodurl - sets your nusmods url\n/listmods - list your modules\n/getmod - get a particular module\n/today - get your schedule for today\n/todayme - guide to get today's schedule\n/nextclass - get your next class schedule\n/setprivacy - protects your privacy\n/cancel - cancel the current operation"
 
-          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: "#{usage}")
+            time_diff = (time_now.to_i - recv_date.to_i) / 60
+            last_state = engine.get_state_transactions(telegramid, command)
+
+            if time_diff <= Global::X_MINUTES
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: "#{usage}")
+            elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: "#{usage}", reply_to_message_id: last_state.to_s)
+            end
+          rescue NUSBotgram::Errors::ServiceUnavailableError
+            sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
+          end
         when /^\/setmodurl$/i
           begin
             telegramid = message.from.id
