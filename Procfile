@@ -1,1 +1,1 @@
-web: bundle exec ruby -C lib/ venus.rb
+worker: bundle exec ruby venus.rb
