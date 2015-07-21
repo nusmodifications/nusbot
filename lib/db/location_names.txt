@@ -1,0 +1,174 @@
+Lecture Theatre 1
+Lecture Theatre 2
+Lecture Theatre 3
+Lecture Theatre 4
+Lecture Theatre 5
+Lecture Theatre 6
+Lecture Theatre 7
+Lecture Theatre 7A
+Lecture Theatre 8
+Lecture Theatre 9
+Lecture Theatre 10
+Lecture Theatre 11
+Lecture Theatre 12
+Lecture Theatre 13
+Lecture Theatre 14
+Lecture Theatre 15
+Lecture Theatre 16
+Lecture Theatre 17
+Lecture Theatre 18
+Lecture Theatre 19
+Lecture Theatre 20
+Lecture Theatre 21
+Lecture Theatre 22
+Lecture Theatre 23
+Lecture Theatre 24
+Lecture Theatre 25
+Lecture Theatre 26
+Lecture Theatre 27
+Lecture Theatre 28
+Lecture Theatre 29
+Lecture Theatre 31
+Lecture Theatre 32
+Lecture Theatre 33
+Lecture Theatre 34
+Lecture Theatre 35
+Lecture Theatre 36
+Lecture Theatre 50
+Lecture Theatre 51
+Lecture Theatre 52
+Lecture Theatre 53
+Engineering Auditorium
+Hon Sui Sen Auditorium
+Ngee Ann Kongsi Auditorium
+UTown Auditorium 1
+UTown Auditorium 2
+UTown Auditorium 3
+MD1
+MD2
+MD3
+MD4
+MD4A
+MD5
+MD7
+MD8
+MD10
+MD11
+S1
+S2
+S3
+S4
+S4A
+S5
+S7
+S8
+S9
+S9A
+S10
+S11
+S12
+S13
+S14
+S15
+S16
+S17
+EW1
+EW2
+E1
+E1A
+E2
+E3
+E3A
+E4
+E4A
+E5
+E5A
+TLAB
+AS1
+AS2
+AS3
+AS4
+AS5
+AS6
+AS7
+COM1
+COM2
+BIZ2
+Mochtar Riady Building
+I3
+Medical / Science Library
+Medical Library
+CRISP
+Central Library
+Central Library Annexe
+Chinese Library
+Hon Sui Sen Library
+Science Co-Op
+Forum Co-Op
+UTown Book Haven
+Ridge View Residence
+Raffles Hall
+Kent Ridge Hall
+Sheares Hall
+Temasek Hall
+Eusoff Hall
+King Edward VII Hall
+Kuok Foundation House
+Prince George's Park Residences 1
+Prince George's Park Residences 2
+Prince George's Park Residences 3
+Prince George's Park Residences 4
+Prince George's Park Residences 5
+Prince George's Park Residences 6
+University Health Centre
+NUS Sports Complex
+NUS Sports Complex II
+NUS Swimming Pool
+MPSH1
+MPSH2
+MPSH3
+MPSH4
+MPSH5
+MPSH6
+Office of Estate Development
+University Cultural Centre
+NUS Student Union
+Visitors' Lodge
+Computer Center
+CELC
+SDE1
+SDE2
+SDE3
+VENTUS
+IMRE
+Temasek Life Sciences Laboratory
+Frontier
+Food Junction @ YIH
+Subway @ YIH
+Starbucks @ YIH
+7-11 @ YIH
+Sarpino @ YIH
+Old Chang Kee @ YIH
+Eskimo
+Alcove. Asian Restaurant
+Techno Edge
+Macdonalds
+The Terrace
+The Deck
+Reedz Cafe
+Super Snacks
+Foodgle Hub
+Cheers @ UTown
+Subway @ UTown
+Wendy's @ UTown
+Spice Table
+Hwang's Korean Restaurant
+Sapore Italian Restaurant
+Koufu
+Starbucks @ UTown
+Flavors
+Sakae Sushi
+Fortune Village
+Bing Bing Ice Cream
+Arts Cru Corner
+Engine Cru Corner
