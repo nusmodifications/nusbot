@@ -1295,14 +1295,6 @@ module NUSBotgram
           end
 
           custom_location.clear
-        when /^\/start$/i
-          question = 'This is an awesome message?'
-          answers = NUSBotgram::DataTypes::ReplyKeyboardMarkup.new(keyboard: [%w(YES), %w(NO)], one_time_keyboard: true)
-          bot.send_message(chat_id: message.chat.id, text: question, reply_markup: answers)
-          puts message.text
-        when /^\/stop$/i
-          kb = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
-          bot.send_message(chat_id: message.chat.id, text: 'Thank you for your honesty!', reply_markup: kb)
         when /^\/([a-zA-Z]|\d+)/
           sticker_id = STICKER_COLLECTIONS[0][:THAT_FREUDIAN_SCOWL]
           bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)

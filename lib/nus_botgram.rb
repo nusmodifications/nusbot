@@ -1,4 +1,4 @@
-require 'typhoeus'
+require 'excon'
 require 'virtus'
 require 'multi_json'
 
