@@ -1268,15 +1268,22 @@ module NUSBotgram
             time_diff = (time_now.to_i - recv_date.to_i) / 60
             last_state = engine.get_state_transactions(telegramid, command)
 
-            geolocation = engine.get_location(CONFIG[2][:REDIS_DB_MAPNUS], "#{custom_location.upcase}")
-            location = JSON.parse(geolocation)
+            location_check = engine.location_exist(CONFIG[2][:REDIS_DB_MAPNUS], "#{custom_location.upcase}")
 
-            if time_diff <= Global::X_MINUTES
-              loc = NUSBotgram::DataTypes::Location.new(latitude: location["geolocation"][0]["latitude"], longitude: location["geolocation"][0]["longitude"])
-              bot.send_location(chat_id: message.chat.id, latitude: loc.latitude, longitude: loc.longitude)
-            elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
-              loc = NUSBotgram::DataTypes::Location.new(latitude: location["geolocation"][0]["latitude"], longitude: location["geolocation"][0]["longitude"])
-              bot.send_location(chat_id: message.chat.id, latitude: loc.latitude, longitude: loc.longitude, reply_to_message_id: last_state.to_s)
+            if !location_check
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: Global::UNRECOGNIZED_LOCATION_RESPONSE)
+            else
+              geolocation = engine.get_location(CONFIG[2][:REDIS_DB_MAPNUS], "#{custom_location.upcase}")
+              location = JSON.parse(geolocation)
+
+              if time_diff <= Global::X_MINUTES
+                loc = NUSBotgram::DataTypes::Location.new(latitude: location["geolocation"][0]["latitude"], longitude: location["geolocation"][0]["longitude"])
+                bot.send_location(chat_id: message.chat.id, latitude: loc.latitude, longitude: loc.longitude)
+              elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
+                loc = NUSBotgram::DataTypes::Location.new(latitude: location["geolocation"][0]["latitude"], longitude: location["geolocation"][0]["longitude"])
+                bot.send_location(chat_id: message.chat.id, latitude: loc.latitude, longitude: loc.longitude, reply_to_message_id: last_state.to_s)
+              end
             end
           rescue NUSBotgram::Errors::ServiceUnavailableError
             sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]

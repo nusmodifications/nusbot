@@ -53,6 +53,7 @@ module NUSBotgram
     NSUNDAY_RESPONSE = "You've got to be kidding! It's Sunday, you shouldn't have any classes today!"
     NSUNDAY_RESPONSE_END = "C'mon, have a break, will ya!"
     FREEDAY_RESPONSE = "Yay! It's YOUR free day! Hang around and chill with me!"
+    UNRECOGNIZED_LOCATION_RESPONSE = "Say what? I don't think I understand where that is. Anything else I can do for you?"
 
     # Action types
     TYPING_ACTION = "typing"
