@@ -8,12 +8,12 @@ require 'yaml'
 
 module NUSBotgram
   class Core
-    CONFIG = YAML.load_file("../lib/config/config.yml")
+    CONFIG = YAML.load_file("lib/config/config.yml")
     API_ENDPOINT = 'http://api.nusmods.com'
     REDIRECT_ENDPOINT = 'https://nusmods.com/redirect.php?timetable='
 
     def initialize
-      @@redis = Redis.new(:host => CONFIG[2][:REDIS_HOST], :port => CONFIG[2][:REDIS_PORT], :db => 0)
+      @@redis = Redis.new(:host => CONFIG[3][:REDIS_HOST], :port => CONFIG[3][:REDIS_PORT], :password => CONFIG[3][:REDIS_PASSWORD], :db => 0)
     end
 
     private

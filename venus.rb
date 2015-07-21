@@ -2,13 +2,14 @@ require 'httparty'
 require 'json'
 require 'yaml'
 
-require_relative 'nus_botgram'
+require_relative 'lib/nus_botgram'
 
 module NUSBotgram
   class Venus
     # Configuration & setup
-    CONFIG = YAML.load_file("config/config.yml")
-    STICKER_COLLECTIONS = YAML.load_file("config/stickers.yml")
+    CONFIG = YAML.load_file("lib/config/config.yml")
+    STICKER_COLLECTIONS = YAML.load_file("lib/config/stickers.yml")
+
     bot = NUSBotgram::Bot.new(CONFIG[0][:T_BOT_APIKEY_DEV])
     engine = NUSBotgram::Core.new
     models = NUSBotgram::Models.new

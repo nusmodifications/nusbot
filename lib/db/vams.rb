@@ -13,7 +13,7 @@ module NUSBotgram
     lat = /\lat\=(\d.\d+)/
     lon = /\long\=(\d+.\d+)/
 
-    redis = Redis.new(:host => CONFIG[2][:REDIS_HOST], :port => CONFIG[2][:REDIS_PORT], :db => CONFIG[2][:REDIS_DB_MAPNUS])
+    redis = Redis.new(:host => CONFIG[3][:REDIS_HOST], :port => CONFIG[3][:REDIS_PORT], :password => CONFIG[3][:REDIS_PASSWORD], :db => CONFIG[3][:REDIS_DB_MAPNUS])
 
     location_names = Hash[location_codes.zip(location_names)]
     locations = File.readlines("loc_db_input.txt").map { |line|
