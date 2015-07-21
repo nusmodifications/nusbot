@@ -4,6 +4,7 @@ require 'digest'
 require 'httparty'
 require 'json'
 require 'redis'
+require 'yaml'
 
 module NUSBotgram
   class Core

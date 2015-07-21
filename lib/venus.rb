@@ -1263,7 +1263,7 @@ module NUSBotgram
             command = message.text
             message_id = message.message_id
             recv_date = Time.parse(message.date.to_s)
-            custom_location = message.text.sub!("where is ", "").strip
+            custom_location = message.text.downcase.sub!("where is ", "").strip
 
             time_diff = (time_now.to_i - recv_date.to_i) / 60
             last_state = engine.get_state_transactions(telegramid, command)
