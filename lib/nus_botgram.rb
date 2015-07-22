@@ -28,6 +28,7 @@ require_relative 'nusbotgram/api_response'
 
 require_relative 'engine/core'
 require_relative 'engine/wit_engine'
+require_relative 'engine/brain'
 
 require_relative 'config/global'
 require_relative 'model/models'

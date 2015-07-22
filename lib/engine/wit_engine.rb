@@ -15,6 +15,8 @@ module NUSBotgram
         @expected_version = expected_version
       end
 
+      public
+
       def message(query, context = nil, meta = nil)
         params = { q: query, context: context, meta: meta }
         headers = default_headers.merge(params: params)
@@ -36,6 +38,8 @@ module NUSBotgram
 
         @default_headers
       end
+
+      private
 
       def api
         @api ||= RestClient::Resource.new API_ENDPOINT
