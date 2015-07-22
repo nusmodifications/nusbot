@@ -1,5 +1,6 @@
 require 'httparty'
 require 'json'
+require 'rest_client'
 require 'yaml'
 
 require_relative 'lib/nus_botgram'
@@ -13,6 +14,7 @@ module NUSBotgram
     bot = NUSBotgram::Bot.new(CONFIG[0][:T_BOT_APIKEY_DEV])
     engine = NUSBotgram::Core.new
     models = NUSBotgram::Models.new
+    brain = NUSBotgram::Brain.new
 
     # Custom Regex Queries for dynamic command
     custom_today = ""
@@ -22,6 +24,7 @@ module NUSBotgram
       time_now = Time.now.getlocal('+08:00')
 
       engine.save_message_history(message.from.id, 1, message.chat.id, message.message_id, message.from.first_name, message.from.last_name, message.from.username, message.from.id, message.date, message.text)
+      brain.learn(message.text)
       puts "In chat #{message.chat.id}, @#{message.from.first_name} > @#{message.from.id} said: #{message.text}"
 
       engine.save_state_transactions(message.from.id, message.text, message.message_id)

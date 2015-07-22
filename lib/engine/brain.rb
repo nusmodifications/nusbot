@@ -12,7 +12,7 @@ module NUSBotgram
 
     public
 
-    def pre_process(query)
+    def learn(query)
       @@processed_store = @@core.message(query)
     end
 
