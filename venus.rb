@@ -1,6 +1,5 @@
 require 'httparty'
 require 'json'
-require 'rest_client'
 require 'yaml'
 
 require_relative 'lib/nus_botgram'

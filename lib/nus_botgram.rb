@@ -1,4 +1,5 @@
 require 'excon'
+require 'rest_client'
 require 'virtus'
 require 'multi_json'
 
