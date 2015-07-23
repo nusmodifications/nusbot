@@ -14,19 +14,15 @@ module NUSBotgram
     engine = NUSBotgram::Core.new
     models = NUSBotgram::Models.new
     brain = NUSBotgram::Brain.new
-
-    # Custom Regex Queries for dynamic command
-    custom_today = ""
-    custom_location = ""
+    scheduler = NUSBotgram::Scheduler.new
 
     bot.get_updates do |message|
       time_now = Time.now.getlocal('+08:00')
 
       brain.learn(message.text)
       engine.save_message_history(message.from.id, 1, message.chat.id, message.message_id, message.from.first_name, message.from.last_name, message.from.username, message.from.id, message.date, message.text)
-      puts "In chat #{message.chat.id}, @#{message.from.first_name} > @#{message.from.id} said: #{message.text}"
-
       engine.save_state_transactions(message.from.id, message.text, message.message_id)
+      puts "In chat #{message.chat.id}, @#{message.from.first_name} > @#{message.from.id} said: #{message.text}"
 
       case message.text
         when /greet/i
@@ -44,7 +40,7 @@ module NUSBotgram
 
               bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
               bot.send_message(chat_id: message.chat.id, text: bot_reply)
-              engine.save_state_transactions(telegram_id, command, message_id)
+              engine.remove_state_transactions(telegram_id, command)
             elsif time_diff >= Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
               bot_reply = "Hello, #{message.from.first_name}!"
 
@@ -81,7 +77,7 @@ module NUSBotgram
           bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
           bot.send_message(chat_id: message.chat.id, text: bot_reply)
         when /when is your birthday/i
-          bot_reply = "30th June 2015"
+          bot_reply = "30 June 2015"
 
           bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
           bot.send_message(chat_id: message.chat.id, text: bot_reply)
@@ -908,20 +904,19 @@ module NUSBotgram
             bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
             bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
           end
-        when /(^\/today$|^\/today #{custom_today})/
+        when /^\/today$|^\/today.(?<ltype>.*)$/
           begin
             telegramid = message.from.id
             command = message.text
             message_id = message.message_id
             recv_date = Time.parse(message.date.to_s)
+            custom_today = "#{$~[:ltype]}"
 
             time_diff = (time_now.to_i - recv_date.to_i) / 60
             last_state = engine.get_state_transactions(telegramid, command)
 
             if time_diff <= Global::X_MINUTES
-              custom_today = message.text.sub!("/today", "").strip
-
-              if custom_today.eql?("") || custom_today == ""
+              if custom_today.eql?("")
                 day_of_week_regex = /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/
 
                 if !engine.db_exist(telegramid)
@@ -1008,14 +1003,8 @@ module NUSBotgram
               elsif custom_today.downcase.eql?("tut3") || custom_today.downcase.eql?("tutorial3")
                 models.today_star_command(bot, engine, message, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
               end
-
-              custom_today.clear
             elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
-              custom_today = message.text.sub!("/today", "").strip
-
-              if custom_today.eql?("") || custom_today == ""
-                day_of_week_regex = /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/
-
+              if custom_today.eql?("")
                 if !engine.db_exist(message.from.id)
                   force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
                   bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
@@ -1100,8 +1089,6 @@ module NUSBotgram
               elsif custom_today.downcase.eql?("tut3") || custom_today.downcase.eql?("tutorial3")
                 models.today_star_command(bot, engine, message, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
               end
-
-              custom_today.clear
             end
           rescue NUSBotgram::Errors::ServiceUnavailableError
             sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
@@ -1259,14 +1246,90 @@ module NUSBotgram
         when /^\/setprivacy$/i
           bot.send_message(chat_id: message.chat.id, text: "Operation not implemented yet")
         when /^\/cancel$/i
-          bot.send_message(chat_id: message.chat.id, text: Global::BOT_CANCEL_NO_STATE)
-        when /^where is #{custom_location}/i
           begin
             telegramid = message.from.id
             command = message.text
             message_id = message.message_id
             recv_date = Time.parse(message.date.to_s)
-            custom_location = message.text.downcase.sub!("where is ", "").strip
+
+            time_diff = (time_now.to_i - recv_date.to_i) / 60
+            last_state = engine.get_state_transactions(telegramid, command)
+
+            if time_diff <= Global::X_MINUTES
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: Global::BOT_CANCEL_NO_STATE)
+            elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: Global::BOT_CANCEL_NO_STATE, reply_to_message_id: last_state.to_s)
+            end
+          rescue NUSBotgram::Errors::ServiceUnavailableError
+            sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
+          end
+        when /^\/alert$|^\/alert.(?<time>.\w+)\s(?<task>.*)$/i
+          begin
+            telegramid = message.from.id
+            command = message.text
+            message_id = message.message_id
+            recv_date = Time.parse(message.date.to_s)
+            duration = "#{$~[:time]}"
+            task = "#{$~[:task]}"
+
+            time_diff = (time_now.to_i - recv_date.to_i) / 60
+            last_state = engine.get_state_transactions(telegramid, command)
+
+            if time_diff <= Global::X_MINUTES
+              if duration.eql?("") || task.eql?("")
+                bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: message.chat.id, text: Global::BOT_ALERT_MESSAGE)
+                engine.remove_state_transactions(telegram_id, command)
+              else
+                delta = scheduler.parse_duration(duration)
+                unix_timestamp = time_now.to_i + delta
+
+                engine.save_state_transactions(telegramid, command, message_id)
+                engine.save_alert_transactions(telegramid, unix_timestamp, task)
+                engine.remove_state_transactions(telegramid, command)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: message.chat.id, text: "Your message had been scheduled, its ID is #{message_id}.")
+              end
+            elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
+              if duration.eql?("") || task.eql?("")
+                bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: message.chat.id, text: Global::BOT_ALERT_MESSAGE, reply_to_message_id: last_state.to_s)
+                engine.remove_state_transactions(telegramid, command)
+              else
+                delta = scheduler.parse_duration(duration)
+                unix_timestamp = time_now.to_i + delta
+
+                engine.save_state_transactions(telegramid, command, message_id)
+                engine.save_alert_transactions(telegramid, unix_timestamp, task)
+                engine.remove_state_transactions(telegramid, command)
+
+                bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: message.chat.id, text: "Your message had been scheduled, its ID is #{message_id}.", reply_to_message_id: last_state.to_s)
+              end
+            end
+          rescue NUSBotgram::Errors::ServiceUnavailableError
+            sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
+          end
+        when /^where is.(?<location>.*)$/i
+          begin
+            telegramid = message.from.id
+            command = message.text
+            message_id = message.message_id
+            recv_date = Time.parse(message.date.to_s)
+            custom_location = "#{$~[:location]}"
 
             time_diff = (time_now.to_i - recv_date.to_i) / 60
             last_state = engine.get_state_transactions(telegramid, command)
@@ -1296,15 +1359,39 @@ module NUSBotgram
             bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
             bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
           end
-
-          custom_location.clear
         when /^\/([a-zA-Z]|\d+)/
-          sticker_id = STICKER_COLLECTIONS[0][:THAT_FREUDIAN_SCOWL]
-          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+          begin
+            telegramid = message.from.id
+            command = message.text
+            message_id = message.message_id
+            recv_date = Time.parse(message.date.to_s)
 
-          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: Global::UNRECOGNIZED_COMMAND_RESPONSE)
+            time_diff = (time_now.to_i - recv_date.to_i) / 60
+            last_state = engine.get_state_transactions(telegramid, command)
+
+            if time_diff <= Global::X_MINUTES
+              sticker_id = STICKER_COLLECTIONS[0][:THAT_FREUDIAN_SCOWL]
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: Global::UNRECOGNIZED_COMMAND_RESPONSE)
+            elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
+              sticker_id = STICKER_COLLECTIONS[0][:THAT_FREUDIAN_SCOWL]
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id, reply_to_message_id: last_state.to_s)
+
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: Global::UNRECOGNIZED_COMMAND_RESPONSE, reply_to_message_id: last_state.to_s)
+            end
+          rescue NUSBotgram::Errors::ServiceUnavailableError
+            sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
+          end
       end
     end
   end

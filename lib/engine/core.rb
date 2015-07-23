@@ -357,6 +357,29 @@ module NUSBotgram
 
     public
 
+    def get_alert_transactions(telegram_id, unix_timestamp)
+      @@redis.select(0)
+      alert_state = @@redis.hget("users:alerts:#{telegram_id}", unix_timestamp)
+
+      alert_state
+    end
+
+    public
+
+    def save_alert_transactions(telegram_id, unix_timestamp, task, *args)
+      @@redis.select(0)
+      @@redis.hmset("users:alerts:#{telegram_id}", unix_timestamp, task, *args)
+    end
+
+    public
+
+    def remove_alert_transactions(telegram_id, unix_timestamp)
+      @@redis.select(0)
+      @@redis.hdel("users:alerts:#{telegram_id}", unix_timestamp)
+    end
+
+    public
+
     def check_daytime(time)
       if time[0, 2].to_i >= 0 && time[0, 2].to_i <= 11
         return 0
