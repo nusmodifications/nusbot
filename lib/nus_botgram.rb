@@ -1,4 +1,6 @@
 require 'excon'
+require 'httparty'
+require 'multi_json'
 require 'rest_client'
 require 'virtus'
 require 'multi_json'
@@ -33,6 +35,7 @@ require_relative 'engine/brain'
 
 require_relative 'config/global'
 require_relative 'model/models'
+require_relative 'controller/notifications'
 
 require_relative 'common/algorithms'
 require_relative 'common/query_pattern'
@@ -49,7 +52,7 @@ module NUSBotgram
     # Error returned when a param type is invalid
     class InvalidParamTypeError < StandardError
       def initialize(parameter, current_type, allowed_types)
-        super("Invalid parameter type: #{parameter}: #{current_type}. Allowed types: #{allowed_types.each {|type| type.class.to_s }.join(",")}.")
+        super("Invalid parameter type: #{parameter}: #{current_type}. Allowed types: #{allowed_types.each { |type| type.class.to_s }.join(",")}.")
       end
     end
 

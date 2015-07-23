@@ -16,6 +16,9 @@ module NUSBotgram
     TODAYME = '/todayme'
     TODAYSTAR = '/today*'
 
+    # Bot Actions
+    SEND_MESSAGE = '/sendMessage'
+
     # Lesson Types
     DESIGN_LECTURE = 'Design Lecture'
     LABORATORY = 'Laboratory'

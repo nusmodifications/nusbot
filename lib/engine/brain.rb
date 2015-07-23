@@ -1,6 +1,3 @@
-require 'rest_client'
-require 'json'
-
 module NUSBotgram
   class Brain
     CONFIG = YAML.load_file("lib/config/config.yml")
