@@ -79,9 +79,13 @@ module NUSBotgram
 
       module_results = engine.get_mod(telegram_id)
 
+      lessons_ary = Array.new
+      day_lessons = Hash.new { |hash, key| hash[key] = [] }
+
       module_results.each do |key|
         mods_parsed = JSON.parse(key)
 
+        lessons_ary.push([mods_parsed[0]["day_text"], mods_parsed[0]["lesson_type"]])
         days_ary.push(mods_parsed[0]["day_text"])
 
         if mods_parsed[0]["day_text"].eql?(day_today)
@@ -91,6 +95,13 @@ module NUSBotgram
           bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
         end
       end
+
+      lessons_ary.each do |key, value|
+        day_lessons[key] << value
+      end
+
+      # Check if hash exist with Today's day
+      # day_lessons[day_today].empty? # => true, if it's empty, free day
 
       # Identify free day in schedule
       if days_ary.uniq.include?(day_today)
