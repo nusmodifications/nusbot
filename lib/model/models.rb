@@ -207,6 +207,51 @@ module NUSBotgram
         day_lessons[key] << value
       end
 
+      # Check if day exist
+      # Check if lessons exist with day
+      if day_lessons[day_today].empty?
+        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
+        bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_message(chat_id: message.chat.id, text: Global::FREEDAY_RESPONSE, reply_markup: close_keyboard)
+      elsif !day_lessons[day_today].include?(lesson_type)
+        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
+        bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_message(chat_id: message.chat.id, text: "It seems like you are either not taking or do not have any \"#{lesson_type.downcase}\"-based classes today!", reply_markup: close_keyboard)
+      elsif day_lessons[day_today].empty? && day_today.eql?("Saturday")
+        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        sticker_id = sticker_collections[0][:ONE_DOESNT_SIMPLY_SEND_A_TOLKIEN_STICKER]
+        bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_message(chat_id: message.chat.id, text: Global::NSATURDAY_RESPONSE, reply_markup: close_keyboard)
+      elsif day_lessons[day_today].empty? && day_today.eql?("Sunday")
+        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+        bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE)
+
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE_END, reply_markup: close_keyboard)
+      elsif day_lessons[day_today].include?(lesson_type)
+        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!", reply_markup: close_keyboard)
+      end
+
+      engine.remove_state_transactions(telegram_id, Global::TODAYSTAR)
+
       # if daymods_hash[day_today].nil? || daymods_hash[day_today] == nil
       #   close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
       #   bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
