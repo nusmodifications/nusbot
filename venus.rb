@@ -1334,13 +1334,13 @@ module NUSBotgram
             time_diff = (time_now.to_i - recv_date.to_i) / 60
             last_state = engine.get_state_transactions(telegramid, command)
 
-            location_check = engine.location_exist(CONFIG[2][:REDIS_DB_MAPNUS], "#{custom_location.upcase}")
+            location_check = engine.location_exist(CONFIG[3][:REDIS_DB_MAPNUS], "#{custom_location.upcase}")
 
             if !location_check
               bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
               bot.send_message(chat_id: message.chat.id, text: Global::UNRECOGNIZED_LOCATION_RESPONSE)
             else
-              geolocation = engine.get_location(CONFIG[2][:REDIS_DB_MAPNUS], "#{custom_location.upcase}")
+              geolocation = engine.get_location(CONFIG[3][:REDIS_DB_MAPNUS], "#{custom_location.upcase}")
               location = JSON.parse(geolocation)
 
               if time_diff <= Global::X_MINUTES
