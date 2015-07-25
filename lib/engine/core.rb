@@ -366,9 +366,27 @@ module NUSBotgram
 
     public
 
+    def get_alert_state(telegram_id)
+      @@redis.select(0)
+      unix_timestamp = @@redis.lpop("users:alerts:state-#{telegram_id}")
+
+      unix_timestamp
+    end
+
+    public
+
     def save_alert_transactions(telegram_id, unix_timestamp, task, *args)
       @@redis.select(0)
+      save_alert_state(telegram_id, unix_timestamp)
       @@redis.hmset("users:alerts:#{telegram_id}", unix_timestamp, task, *args)
+      @@redis.hset("alerts", telegram_id, unix_timestamp)
+    end
+
+    public
+
+    def save_alert_state(telegram_id, unix_timestamp)
+      @@redis.select(0)
+      @@redis.lpush("users:alerts:state-#{telegram_id}", unix_timestamp)
     end
 
     public

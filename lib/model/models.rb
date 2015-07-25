@@ -3,7 +3,7 @@ require_relative '../common/algorithms'
 
 module NUSBotgram
   class Models
-    
+
     def initialize(bot, engine)
       @@bot = bot
       @@engine = engine

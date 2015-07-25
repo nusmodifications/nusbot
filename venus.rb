@@ -15,6 +15,8 @@ module NUSBotgram
     models = NUSBotgram::Models.new(bot, engine)
     brain = NUSBotgram::Brain.new
     scheduler = NUSBotgram::Scheduler.new
+    notify = NUSBotgram::Notifications.new
+    rufus_scheduler = Rufus::Scheduler.new
 
     bot.get_updates do |message|
       time_now = Time.now.getlocal('+08:00')
@@ -1294,6 +1296,14 @@ module NUSBotgram
                 engine.save_alert_transactions(telegramid, unix_timestamp, task)
                 engine.remove_state_transactions(telegramid, command)
 
+                unix_time = engine.get_alert_state(telegramid)
+                tasks = engine.get_alert_transactions(telegramid, unix_time)
+
+                rufus_scheduler.at duration do
+                  notify.send_notify(telegramid, Global::SEND_MESSAGE, tasks)
+                  engine.remove_state_transactions(telegramid, unix_timestamp)
+                end
+
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: message.chat.id, text: "Your message had been scheduled, its ID is #{message_id}.")
               end
@@ -1309,6 +1319,14 @@ module NUSBotgram
                 engine.save_state_transactions(telegramid, command, message_id)
                 engine.save_alert_transactions(telegramid, unix_timestamp, task)
                 engine.remove_state_transactions(telegramid, command)
+
+                unix_time = engine.get_alert_state(telegramid)
+                tasks = engine.get_alert_transactions(telegramid, unix_time)
+
+                rufus_scheduler.at duration do
+                  notify.send_notify(telegramid, Global::SEND_MESSAGE, tasks)
+                  engine.remove_state_transactions(telegramid, unix_timestamp)
+                end
 
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: message.chat.id, text: "Your message had been scheduled, its ID is #{message_id}.", reply_to_message_id: last_state.to_s)
