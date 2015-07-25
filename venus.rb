@@ -12,7 +12,7 @@ module NUSBotgram
 
     bot = NUSBotgram::Bot.new(CONFIG[0][:T_BOT_APIKEY_DEV])
     engine = NUSBotgram::Core.new
-    models = NUSBotgram::Models.new
+    models = NUSBotgram::Models.new(bot, engine)
     brain = NUSBotgram::Brain.new
     scheduler = NUSBotgram::Scheduler.new
 
@@ -398,7 +398,7 @@ module NUSBotgram
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE)
 
-                      models.list_mods(telegram_id, bot, engine, msg)
+                      models.list_mods(telegram_id, msg)
                     elsif status_code == 403 || status_code == 404
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
@@ -425,7 +425,7 @@ module NUSBotgram
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: message.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE)
 
-                models.list_mods(telegram_id, bot, engine, message)
+                models.list_mods(telegram_id, message)
               end
             elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
               if !engine.db_exist(telegramid)
@@ -460,7 +460,7 @@ module NUSBotgram
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                      models.list_mods(telegram_id, bot, engine, msg)
+                      models.list_mods(telegram_id, msg)
                     elsif status_code == 403 || status_code == 404
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
@@ -486,7 +486,7 @@ module NUSBotgram
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: message.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                models.list_mods(telegramid, bot, engine, message)
+                models.list_mods(telegramid, message)
               end
             end
           rescue NUSBotgram::Errors::ServiceUnavailableError
@@ -541,7 +541,7 @@ module NUSBotgram
                       bot.send_message(chat_id: msg.chat.id, text: Global::DISPLAY_MODULE_MESSAGE, reply_markup: force_reply)
 
                       bot.update do |mod|
-                        models.get_mod(telegram_id, bot, engine, mod, STICKER_COLLECTIONS)
+                        models.get_mod(telegram_id, mod, STICKER_COLLECTIONS)
                       end
                     elsif status_code == 403 || status_code == 404
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
@@ -580,7 +580,7 @@ module NUSBotgram
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                     bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
                   else
-                    models.get_mod(telegramid, bot, engine, msg, STICKER_COLLECTIONS)
+                    models.get_mod(telegramid, msg, STICKER_COLLECTIONS)
                   end
                 end
               end
@@ -618,7 +618,7 @@ module NUSBotgram
                       bot.send_message(chat_id: msg.chat.id, text: Global::DISPLAY_MODULE_MESSAGE, reply_markup: force_reply, reply_to_message_id: last_state.to_s)
 
                       bot.update do |mod|
-                        models.get_mod(telegram_id, bot, engine, mod, STICKER_COLLECTIONS)
+                        models.get_mod(telegram_id, mod, STICKER_COLLECTIONS)
                       end
                     elsif status_code == 403 || status_code == 404
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
@@ -658,7 +658,7 @@ module NUSBotgram
                     bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                     bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
                   else
-                    models.get_mod(telegram_id, bot, engine, msg, STICKER_COLLECTIONS)
+                    models.get_mod(telegram_id, msg, STICKER_COLLECTIONS)
                   end
                 end
               end
@@ -732,7 +732,7 @@ module NUSBotgram
                             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                             bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-                            models.get_today(telegram_id, bot, engine, msg, STICKER_COLLECTIONS)
+                            models.get_today(telegram_id, msg, STICKER_COLLECTIONS)
                           elsif status_code == 403 || status_code == 404
                             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                             bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
@@ -759,30 +759,30 @@ module NUSBotgram
                       bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: response.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-                      models.get_today(telegram_id, bot, engine, response, STICKER_COLLECTIONS)
+                      models.get_today(telegram_id, response, STICKER_COLLECTIONS)
                     end
                   elsif user_reply.downcase.eql?("dlec")
-                    models.today_star_command(bot, engine, response, Global::DESIGN_LECTURE, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::DESIGN_LECTURE, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("lab")
-                    models.today_star_command(bot, engine, response, Global::LABORATORY, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::LABORATORY, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("lec")
-                    models.today_star_command(bot, engine, response, Global::LECTURE, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::LECTURE, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("plec")
-                    models.today_star_command(bot, engine, response, Global::PACKAGED_LECTURE, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::PACKAGED_LECTURE, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("ptut")
-                    models.today_star_command(bot, engine, response, Global::PACKAGED_TUTORIAL, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::PACKAGED_TUTORIAL, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("rec")
-                    models.today_star_command(bot, engine, response, Global::RECITATION, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::RECITATION, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("sec")
-                    models.today_star_command(bot, engine, response, Global::SECTIONAL_TEACHING, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::SECTIONAL_TEACHING, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("sem")
-                    models.today_star_command(bot, engine, response, Global::SEMINAR_STYLE_MODULE_CLASS, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::SEMINAR_STYLE_MODULE_CLASS, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("tut")
-                    models.today_star_command(bot, engine, response, Global::TUTORIAL, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::TUTORIAL, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("tut2")
-                    models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_2, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::TUTORIAL_TYPE_2, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("tut3")
-                    models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
                   end
                 end
 
@@ -839,7 +839,7 @@ module NUSBotgram
                             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                             bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                            models.get_today(telegram_id, bot, engine, msg, STICKER_COLLECTIONS)
+                            models.get_today(telegram_id, msg, STICKER_COLLECTIONS)
                           elsif status_code == 403 || status_code == 404
                             bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                             bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
@@ -866,30 +866,30 @@ module NUSBotgram
                       bot.send_chat_action(chat_id: response.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: response.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                      models.get_today(telegram_id, bot, engine, response, STICKER_COLLECTIONS)
+                      models.get_today(telegram_id, response, STICKER_COLLECTIONS)
                     end
                   elsif user_reply.downcase.eql?("dlec")
-                    models.today_star_command(bot, engine, response, Global::DESIGN_LECTURE, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::DESIGN_LECTURE, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("lab")
-                    models.today_star_command(bot, engine, response, Global::LABORATORY, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::LABORATORY, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("lec")
-                    models.today_star_command(bot, engine, response, Global::LECTURE, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::LECTURE, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("plec")
-                    models.today_star_command(bot, engine, response, Global::PACKAGED_LECTURE, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::PACKAGED_LECTURE, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("ptut")
-                    models.today_star_command(bot, engine, response, Global::PACKAGED_TUTORIAL, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::PACKAGED_TUTORIAL, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("rec")
-                    models.today_star_command(bot, engine, response, Global::RECITATION, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::RECITATION, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("sec")
-                    models.today_star_command(bot, engine, response, Global::SECTIONAL_TEACHING, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::SECTIONAL_TEACHING, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("sem")
-                    models.today_star_command(bot, engine, response, Global::SEMINAR_STYLE_MODULE_CLASS, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::SEMINAR_STYLE_MODULE_CLASS, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("tut")
-                    models.today_star_command(bot, engine, response, Global::TUTORIAL, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::TUTORIAL, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("tut2")
-                    models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_2, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::TUTORIAL_TYPE_2, STICKER_COLLECTIONS)
                   elsif user_reply.downcase.eql?("tut3")
-                    models.today_star_command(bot, engine, response, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
+                    models.today_star_command(response, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
                   end
                 end
 
@@ -917,7 +917,6 @@ module NUSBotgram
 
             if time_diff <= Global::X_MINUTES
               if custom_today.eql?("")
-                day_of_week_regex = /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/
 
                 if !engine.db_exist(telegramid)
                   force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
@@ -978,30 +977,30 @@ module NUSBotgram
                   bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-                  models.get_today(telegram_id, bot, engine, message, STICKER_COLLECTIONS)
+                  models.get_today(telegram_id, message, STICKER_COLLECTIONS)
                 end
               elsif custom_today.downcase.eql?("dlec") || custom_today.downcase.eql?("dlecture")
-                models.today_star_command(bot, engine, message, Global::DESIGN_LECTURE, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::DESIGN_LECTURE, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("lab") || custom_today.downcase.eql?("laboratory")
-                models.today_star_command(bot, engine, message, Global::LABORATORY, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::LABORATORY, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("lec") || custom_today.downcase.eql?("lecture")
-                models.today_star_command(bot, engine, message, Global::LECTURE, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::LECTURE, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("plec") || custom_today.downcase.eql?("plecture")
-                models.today_star_command(bot, engine, message, Global::PACKAGED_LECTURE, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::PACKAGED_LECTURE, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("ptut") || custom_today.downcase.eql?("ptutorial")
-                models.today_star_command(bot, engine, message, Global::PACKAGED_TUTORIAL, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::PACKAGED_TUTORIAL, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("rec") || custom_today.downcase.eql?("recitation")
-                models.today_star_command(bot, engine, message, Global::RECITATION, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::RECITATION, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("sec") || custom_today.downcase.eql?("sectional")
-                models.today_star_command(bot, engine, message, Global::SECTIONAL_TEACHING, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::SECTIONAL_TEACHING, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("sem") || custom_today.downcase.eql?("seminar")
-                models.today_star_command(bot, engine, message, Global::SEMINAR_STYLE_MODULE_CLASS, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::SEMINAR_STYLE_MODULE_CLASS, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("tut") || custom_today.downcase.eql?("tutorial")
-                models.today_star_command(bot, engine, message, Global::TUTORIAL, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::TUTORIAL, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("tut2") || custom_today.downcase.eql?("tutorial2")
-                models.today_star_command(bot, engine, message, Global::TUTORIAL_TYPE_2, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::TUTORIAL_TYPE_2, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("tut3") || custom_today.downcase.eql?("tutorial3")
-                models.today_star_command(bot, engine, message, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
               end
             elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
               if custom_today.eql?("")
@@ -1064,30 +1063,30 @@ module NUSBotgram
                   bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                   bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                  models.get_today(telegram_id, bot, engine, message, STICKER_COLLECTIONS)
+                  models.get_today(telegram_id, message, STICKER_COLLECTIONS)
                 end
               elsif custom_today.downcase.eql?("dlec") || custom_today.downcase.eql?("dlecture")
-                models.today_star_command(bot, engine, message, Global::DESIGN_LECTURE, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::DESIGN_LECTURE, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("lab") || custom_today.downcase.eql?("laboratory")
-                models.today_star_command(bot, engine, message, Global::LABORATORY, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::LABORATORY, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("lec") || custom_today.downcase.eql?("lecture")
-                models.today_star_command(bot, engine, message, Global::LECTURE, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::LECTURE, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("plec") || custom_today.downcase.eql?("plecture")
-                models.today_star_command(bot, engine, message, Global::PACKAGED_LECTURE, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::PACKAGED_LECTURE, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("ptut") || custom_today.downcase.eql?("ptutorial")
-                models.today_star_command(bot, engine, message, Global::PACKAGED_TUTORIAL, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::PACKAGED_TUTORIAL, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("rec") || custom_today.downcase.eql?("recitation")
-                models.today_star_command(bot, engine, message, Global::RECITATION, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::RECITATION, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("sec") || custom_today.downcase.eql?("sectional")
-                models.today_star_command(bot, engine, message, Global::SECTIONAL_TEACHING, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::SECTIONAL_TEACHING, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("sem") || custom_today.downcase.eql?("seminar")
-                models.today_star_command(bot, engine, message, Global::SEMINAR_STYLE_MODULE_CLASS, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::SEMINAR_STYLE_MODULE_CLASS, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("tut") || custom_today.downcase.eql?("tutorial")
-                models.today_star_command(bot, engine, message, Global::TUTORIAL, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::TUTORIAL, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("tut2") || custom_today.downcase.eql?("tutorial2")
-                models.today_star_command(bot, engine, message, Global::TUTORIAL_TYPE_2, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::TUTORIAL_TYPE_2, STICKER_COLLECTIONS)
               elsif custom_today.downcase.eql?("tut3") || custom_today.downcase.eql?("tutorial3")
-                models.today_star_command(bot, engine, message, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
+                models.today_star_command(message, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
               end
             end
           rescue NUSBotgram::Errors::ServiceUnavailableError
@@ -1141,7 +1140,7 @@ module NUSBotgram
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::NEXT_CLASS_MESSAGE)
 
-                      models.predict_next_class(telegram_id, bot, engine, msg, STICKER_COLLECTIONS)
+                      models.predict_next_class(telegram_id, msg, STICKER_COLLECTIONS)
                     elsif status_code == 403 || status_code == 404
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
@@ -1169,7 +1168,7 @@ module NUSBotgram
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: message.chat.id, text: Global::NEXT_CLASS_MESSAGE)
 
-                models.predict_next_class(telegram_id, bot, engine, message, STICKER_COLLECTIONS)
+                models.predict_next_class(telegram_id, message, STICKER_COLLECTIONS)
               end
             elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
               if !engine.db_exist(message.from.id)
@@ -1204,7 +1203,7 @@ module NUSBotgram
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::NEXT_CLASS_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                      models.predict_next_class(telegram_id, bot, engine, msg, STICKER_COLLECTIONS)
+                      models.predict_next_class(telegram_id, msg, STICKER_COLLECTIONS)
                     elsif status_code == 403 || status_code == 404
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
@@ -1232,7 +1231,7 @@ module NUSBotgram
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: message.chat.id, text: Global::NEXT_CLASS_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                models.predict_next_class(telegram_id, bot, engine, message, STICKER_COLLECTIONS)
+                models.predict_next_class(telegram_id, message, STICKER_COLLECTIONS)
               end
             end
           rescue NUSBotgram::Errors::ServiceUnavailableError
