@@ -35,7 +35,7 @@ module NUSBotgram
   class CommandQuery < QueryPattern
     attr_accessor :command
 
-    def initialize(command = nil, no_split: false)
+    def initialize(command = nil, no_split = false)
       @command = command
       @no_split = no_split
     end
