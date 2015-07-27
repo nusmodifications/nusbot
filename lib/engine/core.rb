@@ -386,7 +386,7 @@ module NUSBotgram
 
     def save_alert_state(telegram_id, unix_timestamp)
       @@redis.select(0)
-      @@redis.lpush("users:alerts:state-#{telegram_id}", unix_timestamp)
+      @@redis.rpush("users:alerts:state-#{telegram_id}", unix_timestamp)
     end
 
     public
@@ -394,6 +394,29 @@ module NUSBotgram
     def remove_alert_transactions(telegram_id, unix_timestamp)
       @@redis.select(0)
       @@redis.hdel("users:alerts:#{telegram_id}", unix_timestamp)
+    end
+
+    public
+
+    def remove_alert_state(telegram_id)
+      @@redis.select(0)
+      @@redis.rpop("users:alerts:state-#{telegram_id}")
+    end
+
+    public
+
+    def sort_alert_state(telegram_id, limit = 5)
+      @@redis.select(0)
+      sorted = @@redis.sort("users:alerts:state-#{telegram_id}", :limit => [0, limit], :order => "asc")
+
+      sorted
+    end
+
+    public
+
+    def remove_alerts(telegram_id, count = 0, unix_timestamp)
+      @@redis.select(0)
+      @@redis.lrem("users:alerts:state-#{telegram_id}", count, unix_timestamp)
     end
 
     public
