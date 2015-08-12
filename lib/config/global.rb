@@ -39,7 +39,7 @@ module NUSBotgram
     BOT_TODAYME_CANCEL = "The command 'todayme' has been cancelled. Anything else I can do for you?"
     BOT_CANCEL_MESSAGE = "Alright! I will not process this for now!\nBut if you change your mind, just let me know again!\n\nSend /help for a list of commands"
     BOT_CANCEL_NO_STATE = "No active command to cancel. I wasn't doing anything anyway. Zzzzz..."
-    BOT_ALERT_MESSAGE = "Currently in beta. Bot does not support persistence at the moment.\n\nUse this format to create alerts:\n/alert duration task\n\n'Duration' can be one of the following:\n- The number of minutes, hours, days or weeks until the alert in the form 30m, 6h, 20d or 15w, 3M, 1y respectively.\n\n'Task' is anything you want the bot to tell you."
+    BOT_ALERT_MESSAGE = "Warning: Currently in beta. Bot does not support persistence at the moment.\nIf the bot goes to sleep, it will forget to alert.\n\nUse this format to create alerts:\n/alert duration task\n\n'Duration' can be one of the following:\n- The number of minutes, hours, days or weeks until the alert in the form 30m, 6h, 20d or 15w, 3M, 1y respectively.\n\n'Task' is anything you want the bot to tell you."
 
     # Venus Bot's reply messages
     SEND_NUSMODS_URI_MESSAGE = "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)"

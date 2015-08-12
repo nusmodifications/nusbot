@@ -41,6 +41,7 @@ require_relative 'controller/notifications'
 require_relative 'common/algorithms'
 require_relative 'common/query_pattern'
 require_relative 'common/scheduler'
+require_relative 'common/redis_scheduler'
 
 module NUSBotgram
   module Errors
