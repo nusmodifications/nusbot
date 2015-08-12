@@ -78,7 +78,7 @@ module NUSBotgram
 
     def get_today(telegram_id, message, sticker_collections)
       days_ary = Array.new
-      day_today = Time.now.strftime("%A")
+      day_today = Time.now.getlocal('+08:00').strftime("%A")
 
       module_results = @@engine.get_mod(telegram_id)
 
@@ -151,7 +151,7 @@ module NUSBotgram
     public
 
     def get_today_pattern(telegram_id, lesson_type, message, sticker_collections)
-      day_today = Time.now.strftime("%A")
+      day_today = Time.now.getlocal('+08:00').strftime("%A")
 
       module_results = @@engine.get_mod(telegram_id)
       lessons_ary = Array.new
