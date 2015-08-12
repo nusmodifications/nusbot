@@ -361,13 +361,13 @@ module NUSBotgram
 
       # Process and store the sorted time into Hash
       for j in 0...mods_hash.size do
-        # if current_time_now < sorted[j]
-        for k in 0...mods_hash.size do
-          if mods_hash["#{day_today}-#{j}"].include?(sorted[k])
-            sorted_hash[j] = unsorted_hash[k]
+        if current_time_now < sorted[j]
+          for k in 0...mods_hash.size do
+            if mods_hash["#{day_today}-#{j}"].include?(sorted[k])
+              sorted_hash[j] = unsorted_hash[k]
+            end
           end
         end
-        # end
       end
 
       sorted_hash.each do |key, value|
