@@ -386,7 +386,7 @@ module NUSBotgram
 
     def save_alert_transactions(telegram_id, message_id, task, *args)
       @@redis.select(0)
-      save_alert_state(telegram_id, message_id)
+      # save_alert_state(telegram_id, message_id)
       @@redis.hmset("users:alerts:#{telegram_id}", message_id, task, *args)
       @@redis.hset("alerts", telegram_id, message_id)
     end
