@@ -312,13 +312,15 @@ module NUSBotgram
       current_time_now = Time.now.getlocal('+08:00').strftime("%R")
       day_today = Time.now.getlocal('+08:00').strftime("%A")
 
-      algorithms = NUSBotgram::Algorithms.new
+      # algorithms = NUSBotgram::Algorithms.new
       module_results = @@engine.get_mod(telegram_id)
 
       mods_hash = Hash.new
       unsorted_hash = Hash.new
-      sorted_hash = Hash.new
-      time_ary = Array.new
+      # sorted_hash = Hash.new
+      json_data = Array.new
+      # time_ary = Array.new
+      next_class = Array.new
       stop = false
       i = 0
 
@@ -327,9 +329,10 @@ module NUSBotgram
         mods_parsed = JSON.parse(key)
 
         if mods_parsed[0]["day_text"].eql?(day_today)
-          unsorted_hash[i] = mods_parsed
+          json_data.push mods_parsed
+          # unsorted_hash[i] = mods_parsed
           mods_hash["#{mods_parsed[0]["day_text"]}-#{i}"] = mods_parsed[0]["start_time"]
-          time_ary.push(mods_parsed[0]["start_time"])
+          # time_ary.push(mods_parsed[0]["start_time"])
 
           i += 1
         elsif day_today.eql?("Saturday")
@@ -356,43 +359,82 @@ module NUSBotgram
         end
       end
 
-      # Sort array in ascending order - Time relative
-      sorted = algorithms.bubble_sort(time_ary)
+      normal_data = json_data.flatten.to_json
+      sorted_data = JSON[normal_data].sort_by { |j| j['start_time'].to_i }
 
-      # Process and store the sorted time into Hash
-      for j in 0...mods_hash.size do
-        # if current_time_now < sorted[j]
-        for k in 0...mods_hash.size do
-          if mods_hash["#{day_today}-#{j}"].include?(sorted[k])
-            sorted_hash[j] = unsorted_hash[k]
-          end
-        end
-        # end
-      end
+      # # Sort array in ascending order - Time relative
+      # sorted = algorithms.bubble_sort(time_ary)
+      #
+      # # Process and store the sorted time into Hash
+      # for j in 0...mods_hash.size do
+      #   # if current_time_now < sorted[j]
+      #   for k in 0...mods_hash.size do
+      #     if mods_hash["#{day_today}-#{j}"].include?(sorted[k])
+      #       sorted_hash[j] = unsorted_hash[k]
+      #     end
+      #   end
+      #   # end
+      # end
 
-      sorted_hash.each do |key, value|
-        lesson_time = sorted_hash[key][0]["start_time"]
+      for k in 0...sorted_data.size do
+        lesson_time = sorted_data[k]["start_time"]
 
-        if sorted_hash[key][0]["day_text"].eql?(day_today) && current_time_now <= lesson_time && !stop
-          formatted = "#{sorted_hash[key][0]["module_code"]} - #{sorted_hash[key][0]["module_title"]}\n#{sorted_hash[key][0]["lesson_type"][0, 3].upcase}[#{sorted_hash[key][0]["class_no"]}]: #{sorted_hash[key][0]["day_text"]}\n#{sorted_hash[key][0]["start_time"]} - #{sorted_hash[key][0]["end_time"]} @ #{sorted_hash[key][0]["venue"]}"
-
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
-
-          stop = true
-        elsif !stop
-          sticker_id = sticker_collections[0][:LOL_MARLEY]
-          @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: Global::NEXT_CLASS_NULL_MESSAGE)
-
-          stop = true
+        if sorted_data[k]["day_text"].eql?(day_today) && current_time_now <= lesson_time
+          next_class.push(sorted_data[k])
         end
       end
+
+      if next_class.empty? && !stop
+        sticker_id = sticker_collections[0][:LOL_MARLEY]
+        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        @@bot.send_message(chat_id: message.chat.id, text: Global::NEXT_CLASS_NULL_MESSAGE)
+
+        stop = true
+      elsif next_class[0]["day_text"].eql?(day_today) && !stop
+        formatted = "#{next_class[0]["module_code"]} - #{next_class[0]["module_title"]}\n#{next_class[0]["lesson_type"][0, 3].upcase}[#{next_class[0]["class_no"]}]: #{next_class[0]["day_text"]}\n#{next_class[0]["start_time"]} - #{next_class[0]["end_time"]} @ #{next_class[0]["venue"]}"
+
+        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+
+        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+
+        stop = true
+      elsif !stop
+        sticker_id = sticker_collections[0][:LOL_MARLEY]
+        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        @@bot.send_message(chat_id: message.chat.id, text: Global::NEXT_CLASS_NULL_MESSAGE)
+
+        stop = true
+      end
+
+      # sorted_hash.each do |key, value|
+      #   lesson_time = sorted_hash[key][0]["start_time"]
+      #
+      #   if sorted_hash[key][0]["day_text"].eql?(day_today) && current_time_now <= lesson_time && !stop
+      #     formatted = "#{sorted_hash[key][0]["module_code"]} - #{sorted_hash[key][0]["module_title"]}\n#{sorted_hash[key][0]["lesson_type"][0, 3].upcase}[#{sorted_hash[key][0]["class_no"]}]: #{sorted_hash[key][0]["day_text"]}\n#{sorted_hash[key][0]["start_time"]} - #{sorted_hash[key][0]["end_time"]} @ #{sorted_hash[key][0]["venue"]}"
+      #
+      #     @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+      #     @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+      #
+      #     @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+      #     @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+      #
+      #     stop = true
+      #   elsif !stop
+      #     sticker_id = sticker_collections[0][:LOL_MARLEY]
+      #     @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+      #
+      #     @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+      #     @@bot.send_message(chat_id: message.chat.id, text: Global::NEXT_CLASS_NULL_MESSAGE)
+      #
+      #     stop = true
+      #   end
+      # end
     end
   end
 end
