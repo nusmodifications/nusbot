@@ -33,6 +33,7 @@ module NUSBotgram
     TUTORIAL_TYPE_3 = 'Tutorial Type 3'
 
     # Bot's Service Messages
+    BOT_MAINTENANCE_MESSAGE = "Hello there, thank you for using NUSBot Service!\nI will be undergoing a scheduled maintenance today from <00:00 - 01:30> (GMT+08:00).\n\nPlease be advised that the bot service may experience some downtime during that scheduled period.\n\nUpdates:\n1. I will have a new alert system with persistent storage.\n2. Minor updates on my brain."
     BOT_SERVICE_OFFLINE = "Bump! I think that Telegram's service is temporary unavailable..."
     BOT_SETMODURL_CANCEL = "The command 'setmodurl' has been cancelled. Anything else I can do for you?"
     BOT_GETMOD_CANCEL = "The command 'getmod' has been cancelled. Anything else I can do for you?"

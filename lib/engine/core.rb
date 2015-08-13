@@ -281,6 +281,15 @@ module NUSBotgram
 
     public
 
+    def get_all_users
+      @@redis.select(0)
+      keys = @@redis.hkeys("users")
+
+      keys
+    end
+
+    public
+
     def get_state_transactions(telegram_id, command)
       @@redis.select(0)
       last_state = @@redis.hget("users:state:#{telegram_id}", command)
@@ -375,11 +384,11 @@ module NUSBotgram
 
     public
 
-    def save_alert_transactions(telegram_id, unix_timestamp, task, *args)
+    def save_alert_transactions(telegram_id, message_id, task, *args)
       @@redis.select(0)
-      save_alert_state(telegram_id, unix_timestamp)
-      @@redis.hmset("users:alerts:#{telegram_id}", unix_timestamp, task, *args)
-      @@redis.hset("alerts", telegram_id, unix_timestamp)
+      save_alert_state(telegram_id, message_id)
+      @@redis.hmset("users:alerts:#{telegram_id}", message_id, task, *args)
+      @@redis.hset("alerts", telegram_id, message_id)
     end
 
     public
@@ -391,9 +400,9 @@ module NUSBotgram
 
     public
 
-    def remove_alert_transactions(telegram_id, unix_timestamp)
+    def remove_alert_transactions(telegram_id, message_id)
       @@redis.select(0)
-      @@redis.hdel("users:alerts:#{telegram_id}", unix_timestamp)
+      @@redis.hdel("users:alerts:#{telegram_id}", message_id)
     end
 
     public
