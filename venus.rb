@@ -15,8 +15,8 @@ module NUSBotgram
     models = NUSBotgram::Models.new(bot, engine)
     brain = NUSBotgram::Brain.new
     scheduler = NUSBotgram::Scheduler.new
-    notify = NUSBotgram::Notifications.new
-    rufus_scheduler = Rufus::Scheduler.new
+    redis_scheduler = Redis.new(:host => CONFIG[3][:SCHEDULER_REDIS_HOST], :port => CONFIG[3][:SCHEDULER_REDIS_PORT], :db => CONFIG[3][:SCHEDULER_REDIS_DB_DEFAULT])
+    scheduler_engine = NUSBotgram::RedisScheduler.new(redis_scheduler, blocking: true)
 
     bot.get_updates do |message|
       time_now = Time.now.getlocal('+08:00')
@@ -1292,17 +1292,11 @@ module NUSBotgram
                 delta = scheduler.parse_duration(duration)
                 unix_timestamp = time_now.to_i + delta
 
-                engine.save_state_transactions(telegramid, command, message_id)
-                engine.save_alert_transactions(telegramid, unix_timestamp, task)
-                engine.remove_state_transactions(telegramid, command)
+                scheduler_engine.schedule!("#{telegramid}:#{message_id}", unix_timestamp)
 
-                unix_time = engine.get_alert_state(telegramid)
-                tasks = engine.get_alert_transactions(telegramid, unix_time)
-
-                rufus_scheduler.at duration do
-                  notify.send_notify(telegramid, Global::SEND_MESSAGE, tasks)
-                  engine.remove_state_transactions(telegramid, unix_timestamp)
-                end
+                engine.save_state_transactions(telegramid, unix_timestamp, message_id)
+                engine.save_alert_transactions(telegramid, message_id, task)
+                engine.remove_state_transactions(telegramid, unix_timestamp)
 
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: message.chat.id, text: "Your message had been scheduled, its ID is #{message_id}.")
@@ -1316,17 +1310,11 @@ module NUSBotgram
                 delta = scheduler.parse_duration(duration)
                 unix_timestamp = time_now.to_i + delta
 
-                engine.save_state_transactions(telegramid, command, message_id)
-                engine.save_alert_transactions(telegramid, unix_timestamp, task)
-                engine.remove_state_transactions(telegramid, command)
+                scheduler_engine.schedule!("#{telegramid}:#{message_id}", unix_timestamp)
 
-                unix_time = engine.get_alert_state(telegramid)
-                tasks = engine.get_alert_transactions(telegramid, unix_time)
-
-                rufus_scheduler.at duration do
-                  notify.send_notify(telegramid, Global::SEND_MESSAGE, tasks)
-                  engine.remove_state_transactions(telegramid, unix_timestamp)
-                end
+                engine.save_state_transactions(telegramid, unix_timestamp, message_id)
+                engine.save_alert_transactions(telegramid, message_id, task)
+                engine.remove_state_transactions(telegramid, unix_timestamp)
 
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
                 bot.send_message(chat_id: message.chat.id, text: "Your message had been scheduled, its ID is #{message_id}.", reply_to_message_id: last_state.to_s)
