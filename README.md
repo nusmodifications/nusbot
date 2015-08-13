@@ -3,6 +3,13 @@
 [![Join the chat at https://gitter.im/nusmodifications/nusbot](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/nusmodifications/nusbot?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Telegram bot for NUS
 
+## How do I add NUSBot in Telegram?
+It's really simple, just scan the QR Code below, and it will request to open the chat with Telegram!
+
+![alt text][logo]
+
+[logo]: https://scontent-lax1-1.xx.fbcdn.net/hphotos-xfp1/t31.0-8/s200x200/11838536_10206782169648819_2625549093684819737_o.jpg "Telegram Contact - NUSBot"
+
 ## Usage
 
 First you'll need to register your bot and get an API token.
