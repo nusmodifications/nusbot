@@ -1,3 +1,3 @@
 module NUSBotgram
-  VERSION = "0.3.80"
+  VERSION = "0.3.81"
 end
