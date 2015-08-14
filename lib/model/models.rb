@@ -436,5 +436,66 @@ module NUSBotgram
       #   end
       # end
     end
+
+    public
+
+    def get_tomorrow(telegram_id, message, sticker_collections)
+      day_today = Time.now.getlocal('+08:00').strftime("%A")
+      days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+      i = 1
+      day_count = 0
+      json_data = Array.new
+
+      days.each do |day|
+        if day.equal?(day_today) || day == day_today
+          day_count = i
+        end
+
+        i += 1
+      end
+
+      module_results = @@engine.get_mod(telegram_id)
+
+      module_results.each do |key|
+        mods_parsed = JSON.parse(key)
+
+        if mods_parsed[0]["day_text"].eql?(days[day_count])
+          json_data.push mods_parsed
+        end
+      end
+
+      # Sort based on start_time
+      normal_data = json_data.flatten.to_json
+      sorted_data = JSON[normal_data].sort_by { |j| j['start_time'].to_i }
+
+      for k in 0...sorted_data.size do
+        formatted = "#{sorted_data[k]["module_code"]} - #{sorted_data[k]["module_title"]}\n#{sorted_data[k]["lesson_type"][0, 3].upcase}[#{sorted_data[k]["class_no"]}]: #{sorted_data[k]["day_text"]}\n#{sorted_data[k]["start_time"]} - #{sorted_data[k]["end_time"]} @ #{sorted_data[k]["venue"]}"
+
+        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+      end
+
+      if days[day_count].eql?("Saturday")
+        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        sticker_id = sticker_collections[0][:ONE_DOESNT_SIMPLY_SEND_A_TOLKIEN_STICKER]
+        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        @@bot.send_message(chat_id: message.chat.id, text: Global::NSATURDAY_RESPONSE)
+      elsif days[day_count].eql?("Sunday")
+        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        @@bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE)
+
+        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        @@bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE_END)
+      end
+
+      @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+      @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+    end
   end
 end
