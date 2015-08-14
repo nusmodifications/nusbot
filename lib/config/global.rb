@@ -54,6 +54,7 @@ module NUSBotgram
     DISPLAY_MODULE_MESSAGE = "Alright! What module do you want me to display?"
     SEARCH_MODULES_MESSAGE = "Alright! What modules do you want to search?"
     GET_TIMETABLE_TODAY_MESSAGE = "Alright! Let's get you your schedule for today!"
+    GET_TIMETABLE_TOMORROW_MESSAGE = "Alright! Let's get you your schedule for tomorrow!"
     NSATURDAY_RESPONSE = "One does not simply have classes on Saturday!"
     NSUNDAY_RESPONSE = "You've got to be kidding! It's Sunday, you shouldn't have any classes today!"
     NSUNDAY_RESPONSE_END = "C'mon, have a break, will ya!"

@@ -1140,7 +1140,7 @@ module NUSBotgram
                       engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE)
 
                       models.get_tomorrow(telegram_id, msg, STICKER_COLLECTIONS)
                     elsif status_code == 403 || status_code == 404
@@ -1167,7 +1167,7 @@ module NUSBotgram
               else
                 telegram_id = message.from.id
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-                bot.send_message(chat_id: message.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE, reply_to_message_id: last_state.to_s)
+                bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE)
 
                 models.get_tomorrow(telegram_id, message, STICKER_COLLECTIONS)
               end
@@ -1202,9 +1202,9 @@ module NUSBotgram
                       engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE)
+                      bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                      models.get_tomorrow(telegram_id, msg, STICKER_COLLECTIONS)
+                      models.get_tomorrow(telegram_id, msg, STICKER_COLLECTIONS, reply_to_message_id: last_state.to_s)
                     elsif status_code == 403 || status_code == 404
                       bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                       bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
@@ -1229,9 +1229,9 @@ module NUSBotgram
               else
                 telegram_id = message.from.id
                 bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-                bot.send_message(chat_id: message.chat.id, text: Global::RETRIEVE_TIMETABLE_MESSAGE, reply_to_message_id: last_state.to_s)
+                bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                models.get_tomorrow(telegram_id, message, STICKER_COLLECTIONS)
+                models.get_tomorrow(telegram_id, message, STICKER_COLLECTIONS, reply_to_message_id: last_state.to_s)
               end
             end
           rescue NUSBotgram::Errors::ServiceUnavailableError
