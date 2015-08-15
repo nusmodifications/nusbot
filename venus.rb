@@ -216,7 +216,7 @@ module NUSBotgram
             command = message.text
             message_id = message.message_id
             recv_date = Time.parse(message.date.to_s)
-            usage = "Hello! I am #{Global::BOT_NAME}, I am your NUS personal assistant at your service! I can guide you around NUS, get your NUSMods timetable, and lots more!\n\nYou can control me by sending these commands:\n\n/setmodurl - sets your nusmods url\n/listmods - list your modules\n/getmod - get a particular module\n/today - get your schedule for today\n/todayme - guide to get today's schedule\n/nextclass - get your next class schedule\n/setprivacy - protects your privacy\n/cancel - cancel the current operation"
+            usage = "Hello! I am #{Global::BOT_NAME}, I am your NUS personal assistant at your service! I can guide you around NUS, get your NUSMods timetable, and lots more!\n\nYou can control me by sending these commands:\n\n/setmodurl - sets your nusmods url\n/listmods - list your modules\n/getmod - get a particular module\n/today - get your schedule for today\n/todayme - guide to get today's schedule\n/tomorrow - get your schedule for tomorrow\n/nextclass - get your next class schedule\n/setprivacy - protects your privacy\n/cancel - cancel the current operation"
 
             time_diff = (time_now.to_i - recv_date.to_i) / 60
             last_state = engine.get_state_transactions(telegramid, command)
