@@ -290,6 +290,21 @@ module NUSBotgram
 
     public
 
+    def get_total_users(db)
+      @@redis.select(db)
+      keys = @@redis.keys("users:history:*")
+      n_users = 0
+
+      keys.each do |key|
+        key.sub(/users:history:/, '').chomp('-logs')
+        n_users += 1
+      end
+
+      n_users
+    end
+
+    public
+
     def get_state_transactions(telegram_id, command)
       @@redis.select(0)
       last_state = @@redis.hget("users:state:#{telegram_id}", command)
