@@ -305,6 +305,25 @@ module NUSBotgram
 
     public
 
+    def identify_idle_users(db)
+      @@redis.select(db)
+      keys = @@redis.keys("users:history:*")
+      n_users = Array.new
+
+      keys.each do |key|
+        n_users.push key.sub(/users:history:/, '').chomp('-logs')
+      end
+
+      users = get_all_users
+
+      # Union 2 array sets
+      union = n_users | users
+
+      union
+    end
+
+    public
+
     def get_state_transactions(telegram_id, command)
       @@redis.select(0)
       last_state = @@redis.hget("users:state:#{telegram_id}", command)
