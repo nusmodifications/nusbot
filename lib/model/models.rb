@@ -454,6 +454,10 @@ module NUSBotgram
         i += 1
       end
 
+      if day_count == 7
+        day_count = 0
+      end
+
       module_results = @@engine.get_mod(telegram_id)
 
       module_results.each do |key|
