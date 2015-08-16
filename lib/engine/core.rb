@@ -279,33 +279,18 @@ module NUSBotgram
                                                 :tutorial_periods => tutorial_periods].to_json)
     end
 
-    public
+    private
 
-    def get_all_users
+    def get_active_users
       @@redis.select(0)
       keys = @@redis.hkeys("users")
 
       keys
     end
 
-    public
+    private
 
-    def get_total_users(db)
-      @@redis.select(db)
-      keys = @@redis.keys("users:history:*")
-      n_users = 0
-
-      keys.each do |key|
-        key.sub(/users:history:/, '').chomp('-logs')
-        n_users += 1
-      end
-
-      n_users
-    end
-
-    public
-
-    def identify_idle_users(db)
+    def get_all_history_users(db)
       @@redis.select(db)
       keys = @@redis.keys("users:history:*")
       n_users = Array.new
@@ -314,12 +299,31 @@ module NUSBotgram
         n_users.push key.sub(/users:history:/, '').chomp('-logs')
       end
 
-      users = get_all_users
+      n_users
+    end
 
-      # Union 2 array sets
-      union = n_users | users
+    public
+
+    def get_all_users(db)
+      n_users = get_all_history_users(db)
+      users = get_active_users
+
+      # Union of 2 array sets
+      union = set_union(n_users, users)
 
       union
+    end
+
+    public
+
+    def identify_idle_users(db)
+      n_users = get_all_history_users(db)
+      users = get_active_users
+
+      # Differences of 2 array sets
+      difference = set_difference(n_users, users)
+
+      difference
     end
 
     public
@@ -472,6 +476,30 @@ module NUSBotgram
       elsif time[0, 2].to_i >= 18 && time[0, 2].to_i <= 24
         return 2
       end
+    end
+
+    private
+
+    def set_union(set_a, set_b)
+      union = set_a | set_b
+
+      union
+    end
+
+    private
+
+    def set_intersect(set_a, set_b)
+      intersection = set_a & set_b
+
+      intersection
+    end
+
+    private
+
+    def set_difference(set_a, set_b)
+      difference = set_a - set_b
+
+      difference
     end
   end
 end
