@@ -290,9 +290,18 @@ module NUSBotgram
 
     private
 
-    def get_all_history_users(db)
+    def get_history_userkeys(db)
       @@redis.select(db)
       keys = @@redis.keys("users:history:*")
+
+      keys
+    end
+
+    private
+
+    def get_all_history_users(db)
+      @@redis.select(db)
+      keys = get_history_userkeys(db)
       n_users = Array.new
 
       keys.each do |key|
@@ -324,6 +333,26 @@ module NUSBotgram
       difference = set_difference(n_users, users)
 
       difference
+    end
+
+    public
+
+    def get_all_user_details(db)
+      keys = get_history_userkeys(db)
+      d_users = Array.new
+
+      keys.each do |key|
+        json_data = peek_message_history(db, key)
+        json_parsed = JSON.parse(json_data)
+        details = [:userid => json_parsed[0]['userid'],
+                   :user_first => json_parsed[0]['user_first'],
+                   :user_last => json_parsed[0]['user_last'],
+                   :username => json_parsed[0]['username']].to_json
+
+        d_users.push details
+      end
+
+      d_users
     end
 
     public
@@ -386,6 +415,14 @@ module NUSBotgram
                      :userid => user_id,
                      :message_date => message_date,
                      :message => message].to_json)
+    end
+
+    def peek_message_history(db, user_key)
+      @@redis.select(db)
+      peeked_state = @@redis.lpop(user_key)
+      @@redis.lpush(user_key, peeked_state)
+
+      peeked_state
     end
 
     public
