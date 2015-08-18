@@ -919,7 +919,6 @@ module NUSBotgram
 
             if time_diff <= Global::X_MINUTES
               if custom_today.eql?("")
-
                 if !engine.db_exist(telegramid)
                   force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
                   bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
@@ -952,7 +951,7 @@ module NUSBotgram
                         bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                         bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
 
-                        models.get_today(telegram_id, bot, engine, msg, STICKER_COLLECTIONS)
+                        models.get_today(telegram_id, msg, STICKER_COLLECTIONS)
                       elsif status_code == 403 || status_code == 404
                         bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                         bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
@@ -1038,7 +1037,7 @@ module NUSBotgram
                         bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                         bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
 
-                        models.get_today(telegram_id, bot, engine, msg, STICKER_COLLECTIONS)
+                        models.get_today(telegram_id, msg, STICKER_COLLECTIONS)
                       elsif status_code == 403 || status_code == 404
                         bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
                         bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)

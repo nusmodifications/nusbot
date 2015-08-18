@@ -77,42 +77,46 @@ module NUSBotgram
     public
 
     def get_today(telegram_id, message, sticker_collections)
-      days_ary = Array.new
       day_today = Time.now.getlocal('+08:00').strftime("%A")
+      days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+      i = 1
+      day_count = 0
+      json_data = Array.new
+
+      days.each do |day|
+        if day.equal?(day_today) || day == day_today
+          day_count = i
+        end
+
+        i += 1
+      end
+
+      if day_count == 7
+        day_count = 0
+      end
 
       module_results = @@engine.get_mod(telegram_id)
-
-      lessons_ary = Array.new
-      day_lessons = Hash.new { |hash, key| hash[key] = [] }
 
       module_results.each do |key|
         mods_parsed = JSON.parse(key)
 
-        lessons_ary.push([mods_parsed[0]["day_text"], mods_parsed[0]["lesson_type"]])
-        days_ary.push(mods_parsed[0]["day_text"])
-
-        if mods_parsed[0]["day_text"].eql?(day_today)
-          formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
-
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+        if mods_parsed[0]["day_text"].eql?(days[day_count - 1])
+          json_data.push mods_parsed
         end
       end
 
-      lessons_ary.each do |key, value|
-        day_lessons[key] << value
+      # Sort based on start_time
+      normal_data = json_data.flatten.to_json
+      sorted_data = JSON[normal_data].sort_by { |j| j['start_time'].to_i }
+
+      for k in 0...sorted_data.size do
+        formatted = "#{sorted_data[k]["module_code"]} - #{sorted_data[k]["module_title"]}\n#{sorted_data[k]["lesson_type"][0, 3].upcase}[#{sorted_data[k]["class_no"]}]: #{sorted_data[k]["day_text"]}\n#{sorted_data[k]["start_time"]} - #{sorted_data[k]["end_time"]} @ #{sorted_data[k]["venue"]}"
+
+        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
       end
 
-      # Check if hash exist with Today's day
-      # day_lessons[day_today].empty? # => true, if it's empty, free day
-      # Identify free day in schedule
-      if !day_lessons[day_today].empty?
-        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!", reply_markup: close_keyboard)
-
-        @@engine.remove_state_transactions(telegram_id, Global::TODAYME)
-      elsif day_lessons[day_today].empty? && day_today.eql?("Saturday")
+      if days[day_count - 1].eql?("Saturday")
         close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
         @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
         sticker_id = sticker_collections[0][:ONE_DOESNT_SIMPLY_SEND_A_TOLKIEN_STICKER]
@@ -122,7 +126,7 @@ module NUSBotgram
         @@bot.send_message(chat_id: message.chat.id, text: Global::NSATURDAY_RESPONSE, reply_markup: close_keyboard)
 
         @@engine.remove_state_transactions(telegram_id, Global::TODAYME)
-      elsif day_lessons[day_today].empty? && day_today.eql?("Sunday")
+      elsif days[day_count - 1].eql?("Sunday")
         close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
         @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
         sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
@@ -135,7 +139,7 @@ module NUSBotgram
         @@bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE_END, reply_markup: close_keyboard)
 
         @@engine.remove_state_transactions(telegram_id, Global::TODAYME)
-      elsif day_lessons[day_today].empty?
+      elsif json_data.empty?
         close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
         @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
         sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
@@ -146,6 +150,9 @@ module NUSBotgram
 
         @@engine.remove_state_transactions(telegram_id, Global::TODAYME)
       end
+
+      @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+      @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
     end
 
     public
