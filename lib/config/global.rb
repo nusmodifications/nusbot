@@ -33,6 +33,9 @@ module NUSBotgram
     TUTORIAL_TYPE_3 = 'Tutorial Type 3'
 
     # Bot's Service Messages
+    BOT_TUTORIAL_MESSAGE = "Hello there, I am #{BOT_NAME}. Thank you for using NUSBot Service!\nAsk me anything around NUS! I am your guide. I manage your timetable. I am your personal butler."
+    BOT_TUTORIAL_MESSAGE_2 = "Let's get started! I would like to show you around.\nI am not very advanced yet to process complex queries, but I can manage simple queries for now."
+    BOT_TUTORIAL_MESSAGE_3 = "Start exploring by sending /help for more usage.\nYou can control me by sending these commands:\n\n/setmodurl - sets your nusmods url\n/listmods - list your modules\n/getmod - get a particular module\n/today - get your schedule for today\n/todayme - guide to get today's schedule\n/tomorrow - get your schedule for tomorrow\n/nextclass - get your next class schedule\n/cancel - cancel the current operation"
     BOT_TOUR_MESSAGE = "Hello there, thank you for using NUSBot Service!\nAsk me anything around NUS! I am your guide. I manage your timetable. I am your personal butler.\n\nI noticed that you are new here and I would like to show you around.\nI am not very advanced yet to process complex queries, but I can manage simple queries for now.\n\nStart exploring by sending /help for more usage.\nYou can control me by sending these commands:\n\n/setmodurl - sets your nusmods url\n/listmods - list your modules\n/getmod - get a particular module\n/today - get your schedule for today\n/todayme - guide to get today's schedule\n/tomorrow - get your schedule for tomorrow\n/nextclass - get your next class schedule\n/cancel - cancel the current operation"
     BOT_MAINTENANCE_MESSAGE = "Hello there, thank you for using NUSBot Service!\nI will be undergoing a scheduled maintenance today from <00:00 - 01:30> (GMT+08:00).\n\nPlease be advised that the bot service may experience some downtime during that scheduled period.\n\nUpdates:\n1. I will have a new alert system with persistent storage.\n2. Minor updates on my brain."
     BOT_SERVICE_OFFLINE = "Bump! I think that Telegram's service is temporary unavailable..."
@@ -41,7 +44,7 @@ module NUSBotgram
     BOT_TODAYME_CANCEL = "The command 'todayme' has been cancelled. Anything else I can do for you?"
     BOT_CANCEL_MESSAGE = "Alright! I will not process this for now!\nBut if you change your mind, just let me know again!\n\nSend /help for a list of commands"
     BOT_CANCEL_NO_STATE = "No active command to cancel. I wasn't doing anything anyway. Zzzzz..."
-    BOT_ALERT_MESSAGE = "Warning: Currently in beta. Bot does not support persistence at the moment.\nIf the bot goes to sleep, it will forget to alert.\n\nUse this format to create alerts:\n/alert duration task\n\n'Duration' can be one of the following:\n- The number of minutes, hours, days or weeks until the alert in the form 30m, 6h, 20d or 15w, 3M, 1y respectively.\n\n'Task' is anything you want the bot to tell you."
+    BOT_ALERT_MESSAGE = "Use this format to create alerts:\n/alert duration task\n\n'Duration' can be one of the following:\n- The number of minutes, hours, days or weeks until the alert in the form 30m, 6h, 20d or 15w, 3M, 1y respectively.\n\n'Task' is anything you want the bot to tell you."
 
     # Venus Bot's reply messages
     SEND_NUSMODS_URI_MESSAGE = "Okay! Please send me your NUSMods URL (eg. http://modsn.us/nusbots)"

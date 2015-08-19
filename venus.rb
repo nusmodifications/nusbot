@@ -210,6 +210,35 @@ module NUSBotgram
 
           bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
           bot.send_message(chat_id: message.chat.id, text: bot_reply)
+        when /^\/start$/i
+          begin
+            telegramid = message.from.id
+            command = message.text
+            message_id = message.message_id
+            recv_date = Time.parse(message.date.to_s)
+            
+            time_diff = (time_now.to_i - recv_date.to_i) / 60
+            last_state = engine.get_state_transactions(telegramid, command)
+
+            if time_diff <= Global::X_MINUTES
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: Global::BOT_TUTORIAL_MESSAGE)
+              bot.send_message(chat_id: message.chat.id, text: Global::BOT_TUTORIAL_MESSAGE_2)
+              bot.send_message(chat_id: message.chat.id, text: Global::BOT_TUTORIAL_MESSAGE_3)
+            elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
+              bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+              bot.send_message(chat_id: message.chat.id, text: Global::BOT_TUTORIAL_MESSAGE, reply_to_message_id: last_state.to_s)
+              bot.send_message(chat_id: message.chat.id, text: Global::BOT_TUTORIAL_MESSAGE_2, reply_to_message_id: last_state.to_s)
+              bot.send_message(chat_id: message.chat.id, text: Global::BOT_TUTORIAL_MESSAGE_3, reply_to_message_id: last_state.to_s)
+            end
+          rescue NUSBotgram::Errors::ServiceUnavailableError
+            sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
+          end
         when /^\/help$/i
           begin
             telegramid = message.from.id
