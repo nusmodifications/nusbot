@@ -8,7 +8,8 @@ module NUSBotgram
       @api_token = api_token
       @offset = 0
       @timeout = 60
-      @connection = Excon.new(API_ENDPOINT, :persistent => true)
+      @connection = HTTPClient.new
+      # @connection = Excon.new(API_ENDPOINT, :persistent => true)
 
       @me = get_me
     end
@@ -173,10 +174,15 @@ module NUSBotgram
         end
       end
 
-      response = @connection.post(:path => api_uri,
-                                  :query => validated_params,
-                                  :headers => { "User-Agent" => "NUSBotgram/#{NUSBotgram::VERSION}",
-                                                "Accept" => "application/json" })
+      response = @connection.post("#{API_ENDPOINT}#{api_uri}",
+                                  validated_params,
+                                  { "User-Agent" => "NUSBotgram/#{NUSBotgram::VERSION}",
+                                    "Accept" => "application/json" })
+
+      # response = @connection.post(:path => api_uri,
+      #                             :query => validated_params,
+      #                             :headers => { "User-Agent" => "NUSBotgram/#{NUSBotgram::VERSION}",
+      #                                           "Accept" => "application/json" })
 
       # response = Typhoeus.post(
       #     "#{API_ENDPOINT}/#{api_uri}",

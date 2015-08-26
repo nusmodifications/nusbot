@@ -1,10 +1,10 @@
 require 'excon'
 require 'httparty'
+require 'httpclient'
 require 'multi_json'
 require 'rest_client'
 require 'rufus/scheduler'
 require 'virtus'
-require 'multi_json'
 
 require_relative 'nusbotgram/version'
 
