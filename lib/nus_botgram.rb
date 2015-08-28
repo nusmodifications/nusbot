@@ -36,12 +36,19 @@ require_relative 'engine/brain'
 
 require_relative 'config/global'
 require_relative 'model/models'
+
 require_relative 'controller/notifications'
 
 require_relative 'common/algorithms'
 require_relative 'common/query_pattern'
 require_relative 'common/scheduler'
 require_relative 'common/redis_scheduler'
+
+require_relative 'factory/t_bot'
+require_relative 'factory/bot_factory'
+require_relative 'factory/base_bot'
+require_relative 'factory/bot_platform'
+require_relative 'factory/bot_platform_factory'
 
 module NUSBotgram
   module Errors

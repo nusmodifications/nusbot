@@ -1,32 +1,37 @@
 require_relative '../config/global'
 require_relative '../common/algorithms'
+require_relative '../../lib/factory/bot_platform'
 
 module NUSBotgram
   class Models
 
     def initialize(bot, engine)
-      @@bot = bot
-      @@engine = engine
+      @bot = bot
+      @engine = engine
+      @platform = NUSBotgram::BotPlatform.new(BotFactory.new)
+      @platform.add_telegram(bot)
     end
 
     public
 
     def list_mods(telegram_id, message)
-      module_results = @@engine.get_mod(telegram_id)
+      module_results = @engine.get_mod(telegram_id)
 
       module_results.each do |key|
         mods_parsed = JSON.parse(key)
 
         formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+        @platform.normal_reply_message(message, formatted)
+        # @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        # @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
       end
 
-      @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-      @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+      @platform.completed_task_message(message)
+      # @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+      # @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
 
-      @@engine.remove_state_transactions(telegram_id, Global::LISTMODS)
+      @engine.remove_state_transactions(telegram_id, Global::LISTMODS)
     end
 
     public
@@ -34,7 +39,7 @@ module NUSBotgram
     def get_mod(telegram_id, message, sticker_collections)
       mods_ary = Array.new
 
-      module_results = @@engine.get_mod(telegram_id)
+      module_results = @engine.get_mod(telegram_id)
       mod_code = message.text.upcase
 
       module_results.each do |key|
@@ -45,32 +50,16 @@ module NUSBotgram
         if mods_parsed[0]["module_code"].eql?(mod_code)
           formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+          @platform.normal_reply_message(message, formatted)
         end
       end
 
       if mods_ary.uniq.include?(mod_code)
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+        @platform.completed_task_message(message)
 
-        @@engine.remove_state_transactions(telegram_id, Global::GETMOD)
+        @engine.remove_state_transactions(telegram_id, Global::GETMOD)
       else
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: "Please try again, #{message.from.first_name}!")
+        @platform.invalid_url_message(message, sticker_collections)
       end
     end
 
@@ -95,7 +84,7 @@ module NUSBotgram
         day_count = 0
       end
 
-      module_results = @@engine.get_mod(telegram_id)
+      module_results = @engine.get_mod(telegram_id)
 
       module_results.each do |key|
         mods_parsed = JSON.parse(key)
@@ -112,48 +101,24 @@ module NUSBotgram
       for k in 0...sorted_data.size do
         formatted = "#{sorted_data[k]["module_code"]} - #{sorted_data[k]["module_title"]}\n#{sorted_data[k]["lesson_type"][0, 3].upcase}[#{sorted_data[k]["class_no"]}]: #{sorted_data[k]["day_text"]}\n#{sorted_data[k]["start_time"]} - #{sorted_data[k]["end_time"]} @ #{sorted_data[k]["venue"]}"
 
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+        @platform.normal_reply_message(message, formatted)
       end
 
       if days[day_count - 1].eql?("Saturday")
-        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        sticker_id = sticker_collections[0][:ONE_DOESNT_SIMPLY_SEND_A_TOLKIEN_STICKER]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+        @platform.today_saturday_message(message, sticker_collections)
 
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NSATURDAY_RESPONSE, reply_markup: close_keyboard)
-
-        @@engine.remove_state_transactions(telegram_id, Global::TODAYME)
+        @engine.remove_state_transactions(telegram_id, Global::TODAYME)
       elsif days[day_count - 1].eql?("Sunday")
-        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+        @platform.today_sunday_message(message, sticker_collections)
 
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE_END, reply_markup: close_keyboard)
-
-        @@engine.remove_state_transactions(telegram_id, Global::TODAYME)
+        @engine.remove_state_transactions(telegram_id, Global::TODAYME)
       elsif json_data.empty?
-        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+        @platform.today_freeday_message(message, sticker_collections)
 
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::FREEDAY_RESPONSE, reply_markup: close_keyboard)
-
-        @@engine.remove_state_transactions(telegram_id, Global::TODAYME)
+        @engine.remove_state_transactions(telegram_id, Global::TODAYME)
       end
 
-      close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
-      @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION, reply_markup: close_keyboard)
-      @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+      @platform.today_completed_ckb_message(message)
     end
 
     public
@@ -161,7 +126,7 @@ module NUSBotgram
     def get_today_pattern(telegram_id, lesson_type, message, sticker_collections)
       day_today = Time.now.getlocal('+08:00').strftime("%A")
 
-      module_results = @@engine.get_mod(telegram_id)
+      module_results = @engine.get_mod(telegram_id)
       lessons_ary = Array.new
       day_lessons = Hash.new { |hash, key| hash[key] = [] }
 
@@ -173,28 +138,23 @@ module NUSBotgram
         if mods_parsed[0]["day_text"].eql?(day_today) && mods_parsed[0]["lesson_type"].downcase.eql?("#{lesson_type.downcase}")
           formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+          @platform.normal_reply_message(message, formatted)
         elsif mods_parsed[0]["day_text"].eql?(day_today) && mods_parsed[0]["lesson_type"].downcase.eql?(lesson_type.downcase.eql?("tutorial type 2"))
           formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+          @platform.normal_reply_message(message, formatted)
         elsif mods_parsed[0]["day_text"].eql?(day_today) && mods_parsed[0]["lesson_type"].downcase.eql?(lesson_type.downcase.eql?("tutorial type 3"))
           formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+          @platform.normal_reply_message(message, formatted)
         elsif mods_parsed[0]["day_text"].eql?(day_today) && mods_parsed[0]["lesson_type"].downcase.eql?(lesson_type.downcase.eql?("seminar-style module class"))
           formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+          @platform.normal_reply_message(message, formatted)
         elsif mods_parsed[0]["day_text"].eql?(day_today) && mods_parsed[0]["lesson_type"].downcase.eql?(lesson_type.downcase.eql?("sectional teaching"))
           formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+          @platform.normal_reply_message(message, formatted)
         end
       end
 
@@ -205,110 +165,57 @@ module NUSBotgram
       # Check if day exist
       # Check if lessons exist with day
       if day_lessons[day_today].empty? && day_today.eql?("Saturday")
-        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        sticker_id = sticker_collections[0][:ONE_DOESNT_SIMPLY_SEND_A_TOLKIEN_STICKER]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NSATURDAY_RESPONSE, reply_markup: close_keyboard)
+        @platform.today_saturday_message(message, sticker_collections)
       elsif day_lessons[day_today].empty? && day_today.eql?("Sunday")
-        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE_END, reply_markup: close_keyboard)
+        @platform.today_sunday_message(message, sticker_collections)
       elsif day_lessons[day_today].include?(lesson_type)
-        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!", reply_markup: close_keyboard)
+        @platform.today_completed_ckb_message(message)
       elsif !day_lessons[day_today].include?(lesson_type)
-        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+        free_class = "It seems like you are either not taking or do not have any \"#{lesson_type.downcase}\"-based classes today!"
 
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: "It seems like you are either not taking or do not have any \"#{lesson_type.downcase}\"-based classes today!", reply_markup: close_keyboard)
+        @platform.today_freeclass_message(message, free_class, sticker_collections)
       elsif day_lessons[day_today].empty?
-        close_keyboard = NUSBotgram::DataTypes::ReplyKeyboardHide.new(hide_keyboard: true)
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        sticker_id = sticker_collections[0][:ABRAHAM_LINCOLN_APPROVES]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::FREEDAY_RESPONSE, reply_markup: close_keyboard)
+        @platform.today_freeday_message(message, sticker_collections)
       end
 
-      @@engine.remove_state_transactions(telegram_id, Global::TODAYSTAR)
+      @engine.remove_state_transactions(telegram_id, Global::TODAYSTAR)
     end
 
     public
 
     def today_star_command(message, lesson_type, sticker_collections)
-      if !@@engine.db_exist(message.from.id)
-        force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
+      if !@engine.db_exist(message.from.id)
+        @platform.submit_nusmods_url(message)
 
-        @@bot.update do |msg|
+        @bot.update do |msg|
           mod_uri = msg.text
           telegram_id = msg.from.id
 
           if mod_uri =~ /^\/cancel$/i
-            @@engine.cancel_last_transaction(telegram_id)
-            @@engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+            @engine.cancel_last_transaction(telegram_id)
+            @engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
-            @@bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-            @@bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
-
-            @@bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-            @@bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
+            @platform.submit_nusmods_url(message)
           else
-            status_code = engine.analyze_uri(mod_uri)
+            status_code = @engine.analyze_uri(mod_uri)
 
             if status_code == 200
-              @@engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
+              @engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
+              @engine.remove_state_transactions(telegram_id, Global::SETMODURL)
 
-              @@bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-              @@bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
-
-              @@engine.remove_state_transactions(telegram_id, Global::SETMODURL)
-
-              @@bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-              @@bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
+              @platform.registered_nusmods(message, mod_uri)
 
               get_today_pattern(telegram_id, lesson_type, msg, sticker_collections)
             elsif status_code == 403 || status_code == 404
-              @@bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-              @@bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
-
-              @@bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-              @@bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
-
-              @@bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-              @@bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+              @platform.retry_nusmods_message(message)
             else
-              @@bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-              @@bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
-
-              @@bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-              @@bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
-
-              @@bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-              @@bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+              @platform.retry_nusmods_message(message)
             end
           end
         end
       else
         telegram_id = message.from.id
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
+        @platform.get_today_timetable_message(message)
 
         get_today_pattern(telegram_id, lesson_type, message, sticker_collections)
       end
@@ -321,10 +228,10 @@ module NUSBotgram
       day_today = Time.now.getlocal('+08:00').strftime("%A")
 
       # algorithms = NUSBotgram::Algorithms.new
-      module_results = @@engine.get_mod(telegram_id)
+      module_results = @engine.get_mod(telegram_id)
 
       mods_hash = Hash.new
-      unsorted_hash = Hash.new
+      # unsorted_hash = Hash.new
       # sorted_hash = Hash.new
       json_data = Array.new
       # time_ary = Array.new
@@ -344,24 +251,11 @@ module NUSBotgram
 
           i += 1
         elsif day_today.eql?("Saturday")
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          sticker_id = sticker_collections[0][:ONE_DOESNT_SIMPLY_SEND_A_TOLKIEN_STICKER]
-          @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: Global::NSATURDAY_RESPONSE)
+          @platform.today_saturday_message(message, sticker_collections)
 
           break
         elsif day_today.eql?("Sunday")
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
-          @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE)
-
-          @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          @@bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE_END)
+          @platform.today_sunday_message(message, sticker_collections)
 
           break
         end
@@ -393,29 +287,18 @@ module NUSBotgram
       end
 
       if next_class.empty? && !stop
-        sticker_id = sticker_collections[0][:LOL_MARLEY]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NEXT_CLASS_NULL_MESSAGE)
+        @platform.no_class_message(message, sticker_collections)
 
         stop = true
       elsif next_class[0]["day_text"].eql?(day_today) && !stop
         formatted = "#{next_class[0]["module_code"]} - #{next_class[0]["module_title"]}\n#{next_class[0]["lesson_type"][0, 3].upcase}[#{next_class[0]["class_no"]}]: #{next_class[0]["day_text"]}\n#{next_class[0]["start_time"]} - #{next_class[0]["end_time"]} @ #{next_class[0]["venue"]}"
 
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+        @platform.normal_reply_message(message, formatted)
+        @platform.completed_task_message(message)
 
         stop = true
       elsif !stop
-        sticker_id = sticker_collections[0][:LOL_MARLEY]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NEXT_CLASS_NULL_MESSAGE)
+        @platform.no_class_message(message, sticker_collections)
 
         stop = true
       end
@@ -466,7 +349,7 @@ module NUSBotgram
         day_count = 0
       end
 
-      module_results = @@engine.get_mod(telegram_id)
+      module_results = @engine.get_mod(telegram_id)
 
       module_results.each do |key|
         mods_parsed = JSON.parse(key)
@@ -483,31 +366,16 @@ module NUSBotgram
       for k in 0...sorted_data.size do
         formatted = "#{sorted_data[k]["module_code"]} - #{sorted_data[k]["module_title"]}\n#{sorted_data[k]["lesson_type"][0, 3].upcase}[#{sorted_data[k]["class_no"]}]: #{sorted_data[k]["day_text"]}\n#{sorted_data[k]["start_time"]} - #{sorted_data[k]["end_time"]} @ #{sorted_data[k]["venue"]}"
 
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
+        @platform.normal_reply_message(message, formatted)
       end
 
       if days[day_count].eql?("Saturday")
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        sticker_id = sticker_collections[0][:ONE_DOESNT_SIMPLY_SEND_A_TOLKIEN_STICKER]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NSATURDAY_RESPONSE)
+        @platform.today_saturday_message(message, sticker_collections)
       elsif days[day_count].eql?("Sunday")
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        sticker_id = sticker_collections[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
-        @@bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE)
-
-        @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        @@bot.send_message(chat_id: message.chat.id, text: Global::NSUNDAY_RESPONSE_END)
+        @platform.today_sunday_message(message, sticker_collections)
       end
 
-      @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-      @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
+      @platform.completed_task_message(message)
     end
   end
 end
