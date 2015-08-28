@@ -23,13 +23,9 @@ module NUSBotgram
         formatted = "#{mods_parsed[0]["module_code"]} - #{mods_parsed[0]["module_title"]}\n#{mods_parsed[0]["lesson_type"][0, 3].upcase}[#{mods_parsed[0]["class_no"]}]: #{mods_parsed[0]["day_text"]}\n#{mods_parsed[0]["start_time"]} - #{mods_parsed[0]["end_time"]} @ #{mods_parsed[0]["venue"]}"
 
         @platform.normal_reply_message(message, formatted)
-        # @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-        # @@bot.send_message(chat_id: message.chat.id, text: "#{formatted}")
       end
 
       @platform.completed_task_message(message)
-      # @@bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-      # @@bot.send_message(chat_id: message.chat.id, text: "There you go, #{message.from.first_name}!")
 
       @engine.remove_state_transactions(telegram_id, Global::LISTMODS)
     end
