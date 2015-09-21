@@ -355,6 +355,13 @@ module NUSBotgram
       d_users
     end
 
+    def get_user_details(db, telegram_id)
+      json_data = peek_message_history(db, "users:history:#{telegram_id}-logs")
+      json_parsed = JSON.parse(json_data)
+
+      json_parsed[0]['user_first']
+    end
+
     public
 
     def get_state_transactions(telegram_id, command)
