@@ -4,7 +4,7 @@ module NUSBotgram
     BOT_NAME = 'Venus'
     START_YEAR = 2015
     END_YEAR = 2016
-    SEM = 1
+    SEM = 2
     X_MINUTES = 5
     X_MINUTES_BUFFER = 15
     DAY_REGEX = /([a-zA-Z]{6,})/
