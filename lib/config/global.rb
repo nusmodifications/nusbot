@@ -83,5 +83,7 @@ module NUSBotgram
     IN_TRANSIT = 2
     ERR = 3
     INACTIVE = 4
+
+    WISDOM_UNKNOWN = -1
   end
 end

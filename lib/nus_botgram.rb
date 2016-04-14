@@ -1,3 +1,4 @@
+require 'api-ai-ruby'
 require 'excon'
 require 'httparty'
 require 'httpclient'
@@ -31,6 +32,7 @@ require_relative 'nusbotgram/bot'
 require_relative 'nusbotgram/api_response'
 
 require_relative 'engine/core'
+require_relative 'engine/ai_engine'
 require_relative 'engine/wit_engine'
 require_relative 'engine/brain'
 

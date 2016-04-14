@@ -3,6 +3,7 @@ source "https://rubygems.org"
 gem 'activesupport-inflector'
 gem 'addressable'
 gem 'anybase'
+gem 'api-ai-ruby'
 gem 'excon'
 gem 'httpclient'
 gem 'httparty'
