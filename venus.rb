@@ -170,6 +170,20 @@ module NUSBotgram
       telegram_id
     end
 
+    def self.greet(bot, message)
+      bot_reply = "Hello, #{message.from.first_name}!"
+
+      bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+      bot.send_message(chat_id: message.chat.id, text: bot_reply)
+    end
+
+    def self.greetings(bot, message, time_day)
+      bot_reply = "Good #{time_day}, #{message.from.first_name}!"
+
+      bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+      bot.send_message(chat_id: message.chat.id, text: bot_reply)
+    end
+
     bot.get_updates do |message|
       time_now = Time.now.getlocal('+08:00')
 
@@ -182,6 +196,15 @@ module NUSBotgram
           elsif e.eql?("next") && prev == true
             telegram_id = next_class(bot, engine, message, models, time_now)
           end
+        end
+
+      elsif learning[1].eql?("send_greetings")
+        time_day = learning[0]["greetings"].split(/ /)[1]
+
+        if learning[0]["greetings"].eql?("Good Morning") || learning[0]["greetings"].eql?("Good Afternoon") || learning[0]["greetings"].eql?("Good Evening")
+          greetings(bot, message, time_day)
+        else
+          greet(bot, message)
         end
       end
 
@@ -221,21 +244,12 @@ module NUSBotgram
             bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
             bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
           end
-        when /^hello$/
-          bot_reply = "Hello, #{message.from.first_name}!"
-
-          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: bot_reply)
-        when /^hi$/
-          bot_reply = "Hello, #{message.from.first_name}!"
-
-          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: bot_reply)
-        when /^hey$/
-          bot_reply = "Hello, #{message.from.first_name}!"
-
-          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-          bot.send_message(chat_id: message.chat.id, text: bot_reply)
+        # when /^hello$/
+        #   greet(bot, message)
+        # when /^hi$/
+        #   greet(bot, message)
+        # when /^hey$/
+        #   greet(bot, message)
         when /^how is your day$/
           bot_reply = "I'm good. How about you?"
 

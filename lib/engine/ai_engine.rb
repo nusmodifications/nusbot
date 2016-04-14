@@ -19,6 +19,8 @@ module NUSBotgram
         else
           if intent[0].eql?("request-timetable")
             [intent[2], entities(intent[1])]
+          elsif intent[0].eql?("greetings")
+            [intent[1], intent[2]]
           end
         end
       end
