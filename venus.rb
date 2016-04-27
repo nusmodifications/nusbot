@@ -19,14 +19,71 @@ module NUSBotgram
     redis_scheduler = Redis.new(:host => CONFIG[3][:SCHEDULER_REDIS_HOST], :port => CONFIG[3][:SCHEDULER_REDIS_PORT], :db => CONFIG[3][:SCHEDULER_REDIS_DB_DEFAULT])
     scheduler_engine = NUSBotgram::RedisScheduler.new(redis_scheduler, blocking: true)
 
-    prev = false
+    prev_class = false
+    prev_type = false
+    klass_type = nil
+
+    def self.greet(bot, message)
+      bot_reply = "Hello, #{message.from.first_name}!"
+
+      bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+      bot.send_message(chat_id: message.chat.id, text: bot_reply)
+    end
+
+    def self.greetings(bot, message, time_day)
+      bot_reply = "Good #{time_day}, #{message.from.first_name}!"
+
+      bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+      bot.send_message(chat_id: message.chat.id, text: bot_reply)
+    end
+
+    def self.unknown(bot, engine, message, time_now)
+      begin
+        telegramid = message.from.id
+        command = message.text
+        recv_date = Time.parse(time_now.to_s)
+
+        time_diff = (time_now.to_i - recv_date.to_i) / 60
+        last_state = engine.get_state_transactions(telegramid, command)
+
+        bot_reply = "Hello, #{message.from.first_name}!"
+
+        if time_diff <= Global::X_MINUTES
+          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
+
+          sticker_id = STICKER_COLLECTIONS[0][:THAT_FREUDIAN_SCOWL]
+          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+          bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+          bot.send_message(chat_id: message.chat.id, text: Global::UNKNOWN_KLASS_TYPE_RESPONSE)
+        elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
+          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+          bot.send_message(chat_id: message.chat.id, text: bot_reply)
+
+          sticker_id = STICKER_COLLECTIONS[0][:THAT_FREUDIAN_SCOWL]
+          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+          bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id, reply_to_message_id: last_state.to_s)
+
+          bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+          bot.send_message(chat_id: message.chat.id, text: Global::UNKNOWN_KLASS_TYPE_RESPONSE, reply_to_message_id: last_state.to_s)
+        end
+      rescue NUSBotgram::Errors::ServiceUnavailableError
+        sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
+      end
+    end
 
     def self.next_class(bot, engine, message, models, time_now)
       begin
         telegramid = message.from.id
         command = message.text
-        message_id = message.message_id
-        recv_date = Time.parse(message.date.to_s)
+        recv_date = Time.parse(time_now.to_s)
 
         time_diff = (time_now.to_i - recv_date.to_i) / 60
         last_state = engine.get_state_transactions(telegramid, command)
@@ -170,18 +227,367 @@ module NUSBotgram
       telegram_id
     end
 
-    def self.greet(bot, message)
-      bot_reply = "Hello, #{message.from.first_name}!"
+    def self.today(bot, engine, message, models, time_now)
+      begin
+        telegramid = message.from.id
+        command = message.text
+        recv_date = Time.parse(time_now.to_s)
 
-      bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-      bot.send_message(chat_id: message.chat.id, text: bot_reply)
+        time_diff = (time_now.to_i - recv_date.to_i) / 60
+        last_state = engine.get_state_transactions(telegramid, command)
+
+        if time_diff <= Global::X_MINUTES
+          if !engine.db_exist(telegramid)
+            force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
+
+            bot.update do |msg|
+              mod_uri = msg.text
+              telegram_id = msg.from.id
+
+              if mod_uri =~ /^\/cancel$/i
+                engine.cancel_last_transaction(telegram_id)
+                engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
+              else
+                status_code = engine.analyze_uri(mod_uri)
+
+                if status_code == 200
+                  engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+
+                  engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
+
+                  models.get_today(telegram_id, msg, STICKER_COLLECTIONS)
+                elsif status_code == 403 || status_code == 404
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                else
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                end
+              end
+            end
+          else
+            telegram_id = message.from.id
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE)
+
+            models.get_today(telegram_id, message, STICKER_COLLECTIONS)
+          end
+        elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
+          if !engine.db_exist(message.from.id)
+            force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply, reply_to_message_id: last_state.to_s)
+
+            bot.update do |msg|
+              mod_uri = msg.text
+              telegram_id = msg.from.id
+
+              if mod_uri =~ /^\/cancel$/i
+                engine.cancel_last_transaction(telegram_id)
+                engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
+              else
+                status_code = engine.analyze_uri(mod_uri)
+
+                if status_code == 200
+                  engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                  engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                  models.get_today(telegram_id, msg, STICKER_COLLECTIONS)
+                elsif status_code == 403 || status_code == 404
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                else
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                end
+              end
+            end
+          else
+            telegram_id = message.from.id
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TODAY_MESSAGE, reply_to_message_id: last_state.to_s)
+
+            models.get_today(telegram_id, message, STICKER_COLLECTIONS)
+          end
+        end
+      rescue NUSBotgram::Errors::ServiceUnavailableError
+        sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
+      end
+
+      telegram_id
     end
 
-    def self.greetings(bot, message, time_day)
-      bot_reply = "Good #{time_day}, #{message.from.first_name}!"
+    def self.tomorrow(bot, engine, message, models, time_now)
+      begin
+        telegramid = message.from.id
+        command = message.text
+        recv_date = Time.parse(time_now.to_s)
 
-      bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-      bot.send_message(chat_id: message.chat.id, text: bot_reply)
+        time_diff = (time_now.to_i - recv_date.to_i) / 60
+        last_state = engine.get_state_transactions(telegramid, command)
+
+        if time_diff <= Global::X_MINUTES
+          if !engine.db_exist(telegramid)
+            force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
+
+            bot.update do |msg|
+              mod_uri = msg.text
+              telegram_id = msg.from.id
+
+              if mod_uri =~ /^\/cancel$/i
+                engine.cancel_last_transaction(telegram_id)
+                engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::BOT_GETMOD_CANCEL)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
+              else
+                status_code = engine.analyze_uri(mod_uri)
+
+                if status_code == 200
+                  engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
+
+                  engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE)
+
+                  models.get_tomorrow(telegram_id, msg, STICKER_COLLECTIONS)
+                elsif status_code == 403 || status_code == 404
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                else
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: NUSMODS_URI_CANCEL_MESSAGE)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
+                end
+              end
+            end
+          else
+            telegram_id = message.from.id
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE)
+
+            models.get_tomorrow(telegram_id, message, STICKER_COLLECTIONS)
+          end
+        elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
+          if !engine.db_exist(telegramid)
+            force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply, reply_to_message_id: last_state.to_s)
+
+            bot.update do |msg|
+              mod_uri = msg.text
+              telegram_id = msg.from.id
+
+              if mod_uri =~ /^\/cancel$/i
+                engine.cancel_last_transaction(telegram_id)
+                engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
+
+                bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
+              else
+                status_code = engine.analyze_uri(mod_uri)
+
+                if status_code == 200
+                  engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
+
+                  engine.remove_state_transactions(telegram_id, Global::SETMODURL)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                  models.get_tomorrow(telegram_id, msg, STICKER_COLLECTIONS, reply_to_message_id: last_state.to_s)
+                elsif status_code == 403 || status_code == 404
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                else
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
+
+                  bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
+                  bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
+                end
+              end
+            end
+          else
+            telegram_id = message.from.id
+            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+            bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE, reply_to_message_id: last_state.to_s)
+
+            models.get_tomorrow(telegram_id, message, STICKER_COLLECTIONS, reply_to_message_id: last_state.to_s)
+          end
+        end
+      rescue NUSBotgram::Errors::ServiceUnavailableError
+        sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
+      end
+
+      telegram_id
+    end
+
+    def self.custom_today(bot, engine, message, models, type, time_now)
+      begin
+        telegramid = message.from.id
+        command = message.text
+        recv_date = Time.parse(time_now.to_s)
+        custom_today = type
+
+        time_diff = (time_now.to_i - recv_date.to_i) / 60
+        last_state = engine.get_state_transactions(telegramid, command)
+
+        if time_diff <= Global::X_MINUTES
+          if custom_today.downcase.eql?("dlec") || custom_today.downcase.eql?("dlecture")
+            models.today_star_command(message, Global::DESIGN_LECTURE, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("lab") || custom_today.downcase.eql?("laboratory")
+            models.today_star_command(message, Global::LABORATORY, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("lec") || custom_today.downcase.eql?("lecture")
+            models.today_star_command(message, Global::LECTURE, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("plec") || custom_today.downcase.eql?("plecture")
+            models.today_star_command(message, Global::PACKAGED_LECTURE, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("ptut") || custom_today.downcase.eql?("ptutorial")
+            models.today_star_command(message, Global::PACKAGED_TUTORIAL, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("rec") || custom_today.downcase.eql?("recitation")
+            models.today_star_command(message, Global::RECITATION, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("sec") || custom_today.downcase.eql?("sectional")
+            models.today_star_command(message, Global::SECTIONAL_TEACHING, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("sem") || custom_today.downcase.eql?("seminar")
+            models.today_star_command(message, Global::SEMINAR_STYLE_MODULE_CLASS, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("tut") || custom_today.downcase.eql?("tutorial")
+            models.today_star_command(message, Global::TUTORIAL, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("tut2") || custom_today.downcase.eql?("tutorial2")
+            models.today_star_command(message, Global::TUTORIAL_TYPE_2, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("tut3") || custom_today.downcase.eql?("tutorial3")
+            models.today_star_command(message, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
+          end
+        elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
+          if custom_today.downcase.eql?("dlec") || custom_today.downcase.eql?("dlecture")
+            models.today_star_command(message, Global::DESIGN_LECTURE, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("lab") || custom_today.downcase.eql?("laboratory")
+            models.today_star_command(message, Global::LABORATORY, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("lec") || custom_today.downcase.eql?("lecture")
+            models.today_star_command(message, Global::LECTURE, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("plec") || custom_today.downcase.eql?("plecture")
+            models.today_star_command(message, Global::PACKAGED_LECTURE, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("ptut") || custom_today.downcase.eql?("ptutorial")
+            models.today_star_command(message, Global::PACKAGED_TUTORIAL, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("rec") || custom_today.downcase.eql?("recitation")
+            models.today_star_command(message, Global::RECITATION, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("sec") || custom_today.downcase.eql?("sectional")
+            models.today_star_command(message, Global::SECTIONAL_TEACHING, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("sem") || custom_today.downcase.eql?("seminar")
+            models.today_star_command(message, Global::SEMINAR_STYLE_MODULE_CLASS, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("tut") || custom_today.downcase.eql?("tutorial")
+            models.today_star_command(message, Global::TUTORIAL, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("tut2") || custom_today.downcase.eql?("tutorial2")
+            models.today_star_command(message, Global::TUTORIAL_TYPE_2, STICKER_COLLECTIONS)
+          elsif custom_today.downcase.eql?("tut3") || custom_today.downcase.eql?("tutorial3")
+            models.today_star_command(message, Global::TUTORIAL_TYPE_3, STICKER_COLLECTIONS)
+          end
+        end
+      rescue NUSBotgram::Errors::ServiceUnavailableError
+        sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
+
+        bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
+        bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
+      end
+
+      telegramid
     end
 
     bot.get_updates do |message|
@@ -191,12 +597,45 @@ module NUSBotgram
 
       if learning[0].eql?("send_timetable")
         learning[1].each do |e|
-          if e.eql?("class")
-            prev = true
-          elsif e.eql?("next") && prev == true
+          if e.match(/class/i) || e.eql?("timetable") || e.eql?("schedule")
+            prev_class = true
+          elsif e.eql?("dlec") || e.eql?("dlecture") || e.eql?("design lecture") ||
+              e.eql?("lab") || e.eql?("laboratory") ||
+              e.eql?("lec") || e.eql?("lecture") ||
+              e.eql?("plec") || e.eql?("plecture") || e.eql?("packaged lecture") ||
+              e.eql?("ptut") || e.eql?("ptutorial") || e.eql?("packaged tutorial") ||
+              e.eql?("rec") || e.eql?("recitation") ||
+              e.eql?("sec") || e.eql?("sectional") || e.eql?("sectional teaching") ||
+              e.eql?("sem") || e.eql?("seminar") || e.eql?("seminar-style module class") ||
+              e.eql?("tut") || e.eql?("tutorial") ||
+              e.eql?("tut2") || e.eql?("tutorial2") || e.eql?("tutorial type 2") ||
+              e.eql?("tut3") || e.eql?("tutorial3") || e.eql?("tutorial type 3")
+
+            prev_type = true
+            klass_type = e
+          elsif e.eql?("next") && prev_class == true
             telegram_id = next_class(bot, engine, message, models, time_now)
+          elsif e.eql?("today") && prev_class == true
+            telegram_id = today(bot, engine, message, models, time_now)
+          elsif e.eql?("today") && prev_type == true && !klass_type.eql?("")
+            telegram_id = custom_today(bot, engine, message, models, klass_type, time_now)
+          # elsif e.eql?("today") && prev_type == false && klass_type.eql?("") || klass_type == nil
+          #   unknown(bot, engine, message, time_now)
+          elsif e.eql?("tomorrow") && prev_class == true
+            telegram_id = tomorrow(bot, engine, message, models, time_now)
+          elsif e.eql?("tomorrow") && prev_type == true
+            puts "tmr tut"
           end
+
+          # if e.eql?("tutorial")
+          #   prev = true
+          # elsif e.eql?("today") && prev == true
+          #   telegram_id = custom_today(bot, engine, message, models, "tutorial", time_now)
+          # end
         end
+
+        prev_class = false
+        klass_type = nil
 
       elsif learning[1].eql?("send_greetings")
         time_day = learning[0]["greetings"].split(/ /)[1]
@@ -250,6 +689,34 @@ module NUSBotgram
         #   greet(bot, message)
         # when /^hey$/
         #   greet(bot, message)
+        # when NUSBotgram::DataTypes::CallbackQuery
+        #   # Here you can handle your callbacks from inline buttons
+        #   if message.data == 'touch'
+        #     bot.send_message(chat_id: message.from.id, text: "Don't touch me!")
+        #   end
+        # when NUSBotgram::DataTypes::Message
+        #   kb = [
+        #       NUSBotgram::DataTypes::InlineKeyboardButton.new(text: 'Go to Google', url: 'https://google.com'),
+        #       NUSBotgram::DataTypes::InlineKeyboardButton.new(text: 'Touch me', callback_data: 'touch'),
+        #       NUSBotgram::DataTypes::InlineKeyboardButton.new(text: 'Switch to inline', switch_inline_query: 'some text')
+        #   ]
+        #   markup = NUSBotgram::DataTypes::InlineKeyboardMarkup.new(inline_keyboard: kb)
+        #   bot.send_message(chat_id: message.chat.id, text: 'Make a choice', reply_markup: markup)
+        # when NUSBotgram::DataTypes::InlineQuery
+        #   results = [
+        #       [1, 'First article', 'Very interesting text goes here.'],
+        #       [2, 'Second article', 'Another interesting text here.']
+        #   ].map do |arr|
+        #     NUSBotgram::DataTypes::InlineQueryResultArticle.new(
+        #         id: arr[0],
+        #         title: arr[1],
+        #         input_message_content: NUSBotgram::DataTypes::InputTextMessageContent.new(message_text: arr[2])
+        #     )
+        #   end
+        #
+        #   bot.answer_inline_query(inline_query_id: message.id, results: results)
+        # when NUSBotgram::DataTypes::Message
+        #   bot.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}!")
         when /^how is your day$/
           bot_reply = "I'm good. How about you?"
 
@@ -1305,148 +1772,7 @@ module NUSBotgram
             bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
           end
         when /^\/tomorrow$/i
-          begin
-            telegramid = message.from.id
-            command = message.text
-            message_id = message.message_id
-            recv_date = Time.parse(message.date.to_s)
-
-            time_diff = (time_now.to_i - recv_date.to_i) / 60
-            last_state = engine.get_state_transactions(telegramid, command)
-
-            if time_diff <= Global::X_MINUTES
-              if !engine.db_exist(telegramid)
-                force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
-                bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-                bot.send_message(chat_id: message.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply)
-
-                bot.update do |msg|
-                  mod_uri = msg.text
-                  telegram_id = msg.from.id
-
-                  if mod_uri =~ /^\/cancel$/i
-                    engine.cancel_last_transaction(telegram_id)
-                    engine.remove_state_transactions(telegram_id, Global::SETMODURL)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_GETMOD_CANCEL)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
-                  else
-                    status_code = engine.analyze_uri(mod_uri)
-
-                    if status_code == 200
-                      engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true)
-
-                      engine.remove_state_transactions(telegram_id, Global::SETMODURL)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE)
-
-                      models.get_tomorrow(telegram_id, msg, STICKER_COLLECTIONS)
-                    elsif status_code == 403 || status_code == 404
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
-                    else
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: NUSMODS_URI_CANCEL_MESSAGE)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE)
-                    end
-                  end
-                end
-              else
-                telegram_id = message.from.id
-                bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-                bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE)
-
-                models.get_tomorrow(telegram_id, message, STICKER_COLLECTIONS)
-              end
-            elsif time_diff > Global::X_MINUTES && time_diff <= Global::X_MINUTES_BUFFER
-              if !engine.db_exist(telegramid)
-                force_reply = NUSBotgram::DataTypes::ForceReply.new(force_reply: true, selective: true)
-                bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-                bot.send_message(chat_id: message.chat.id, text: Global::SEND_NUSMODS_URI_MESSAGE, reply_markup: force_reply, reply_to_message_id: last_state.to_s)
-
-                bot.update do |msg|
-                  mod_uri = msg.text
-                  telegram_id = msg.from.id
-
-                  if mod_uri =~ /^\/cancel$/i
-                    engine.cancel_last_transaction(telegram_id)
-                    engine.remove_state_transactions(telegram_id, Global::SETMODURL)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_SETMODURL_CANCEL)
-
-                    bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                    bot.send_message(chat_id: msg.chat.id, text: Global::BOT_CANCEL_MESSAGE)
-                  else
-                    status_code = engine.analyze_uri(mod_uri)
-
-                    if status_code == 200
-                      engine.set_mod(mod_uri, Global::START_YEAR, Global::END_YEAR, Global::SEM, telegram_id)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: "#{Global::REGISTERED_NUSMODS_URI_MESSAGE} @ #{mod_uri}", disable_web_page_preview: true, reply_to_message_id: last_state.to_s)
-
-                      engine.remove_state_transactions(telegram_id, Global::SETMODURL)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                      models.get_tomorrow(telegram_id, msg, STICKER_COLLECTIONS, reply_to_message_id: last_state.to_s)
-                    elsif status_code == 403 || status_code == 404
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
-                    else
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::INVALID_NUSMODS_URI_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: NUSMODS_URI_CANCEL_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                      bot.send_chat_action(chat_id: msg.chat.id, action: Global::TYPING_ACTION)
-                      bot.send_message(chat_id: msg.chat.id, text: Global::NUSMODS_URI_RETRY_MESSAGE, reply_to_message_id: last_state.to_s)
-                    end
-                  end
-                end
-              else
-                telegram_id = message.from.id
-                bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-                bot.send_message(chat_id: message.chat.id, text: Global::GET_TIMETABLE_TOMORROW_MESSAGE, reply_to_message_id: last_state.to_s)
-
-                models.get_tomorrow(telegram_id, message, STICKER_COLLECTIONS, reply_to_message_id: last_state.to_s)
-              end
-            end
-          rescue NUSBotgram::Errors::ServiceUnavailableError
-            sticker_id = STICKER_COLLECTIONS[0][:NIKOLA_TESLA_IS_UNIMPRESSED]
-            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-            bot.send_sticker(chat_id: message.chat.id, sticker: sticker_id)
-
-            bot.send_chat_action(chat_id: message.chat.id, action: Global::TYPING_ACTION)
-            bot.send_message(chat_id: message.chat.id, text: Global::BOT_SERVICE_OFFLINE)
-          end
+          telegram_id = tomorrow(bot, engine, message, models, time_now)
         when /^\/nextclass$/i
           telegram_id = next_class(bot, engine, message, models, time_now)
         when /^\/setprivacy$/i

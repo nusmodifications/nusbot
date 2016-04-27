@@ -32,7 +32,7 @@ module NUSBotgram
           update = NUSBotgram::DataTypes::Update.new(raw_update)
 
           @offset = update.update_id + 1
-          yield update.message
+          yield (update.inline_query ? update.inline_query : update.message)
         end
       end
     end
@@ -137,6 +137,18 @@ module NUSBotgram
       response = api_request("getUserProfilePhotos", params, params_validation)
 
       NUSBotgram::DataTypes::UserProfilePhotos.new(response.result)
+    end
+
+    def answer_inline_query(params)
+      params_validation = {
+          inline_query_id: { required: true, class: [String] },
+          results: { required: true, class: [Array] },
+          cache_time: { required: false, class: [Fixnum] },
+          is_personal: { required: false, class: [TrueClass, FalseClass] },
+          next_offset: { required: false, class: [String] }
+      }
+
+      response = api_request("answerInlineQuery", params, params_validation)
     end
 
     private

@@ -13,7 +13,7 @@ module NUSBotgram
         response = @client.text_request(query.to_s)
 
         intent = intentions(response)
-
+puts "// " + intent.to_s + " //"
         if intent == Global::WISDOM_UNKNOWN
           Global::WISDOM_UNKNOWN
         else

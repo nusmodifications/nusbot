@@ -75,6 +75,7 @@ module NUSBotgram
     UPLOAD_DOCUMENT_ACTION = "upload_document"
     FIND_LOCATION_ACTION = "find_location"
     UNRECOGNIZED_COMMAND_RESPONSE = "Unrecognized command. Say what?"
+    UNKNOWN_KLASS_TYPE_RESPONSE = "Say what? Either I didn't quite understand what you were looking for or you do not have any classes of the following class type today."
     CUSTOM_TODAY_KEYBOARD = [%w(Today), %w(DLEC), %w(LAB), %w(LEC), %w(PLEC), %w(PTUT), %w(REC), %w(SEC), %w(SEM), %w(TUT), %w(TUT2), %w(TUT3)]
 
     # Transaction State
